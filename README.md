@@ -1,11 +1,11 @@
 [![pub package](https://img.shields.io/pub/v/encrypt_env.svg)](https://pub.dev/packages/encrypt_env)
 [![package publisher](https://img.shields.io/pub/publisher/encrypt_env.svg)](https://pub.dev/packages/encrypt_env/publisher)
 
-An encrypted file generator.
+encrypt_env is a Dart package designed to encrypt sensitive environment variables to enhance security for Flutter applications. It provides a convenient solution for protecting sensitive information such as API keys, passwords, and tokens stored in environment configuration files.
 
-## Getting Started 🚀
+## Installation
 
-Download the project and run this command inside the folder
+To install the package, use the following command:
 
 ```sh
 dart pub global activate encrypt_env
@@ -13,27 +13,17 @@ dart pub global activate encrypt_env
 
 ## Usage
 
-Now after the installation you are able to encrypt your sensitive data, but before that we need the data
-
-You need to create a YAML file inside your project in the root as the follow example
+1. Navigate to the root of your Flutter project and configure a folder named environment. Inside this folder, create a file named environment.yaml. This file will contain your sensitive environment variables.
 
 ![Folder example](./assets/folder-example.png)
 
-Maybe you are wondering, "What I need to put inside the environment.yaml file?". The answer is simple, just follow the example.
-
-`environment.yaml`
+2. Add your sensitive environment variables to the environment.yaml file. For example:
 
 ```yaml
 environment:
   base_url: "http://localhost:3000"
   version: "1.0.0"
   production: false
-  database_path: ""
-  app_store_id: ""
-  app_store_url: ""
-  play_store_url: ""
-  package_name: ""
-  bundle_id: ""
   headers:
     api-key: ""
 endpoints:
@@ -41,36 +31,45 @@ endpoints:
   endpoint_b: ""
 ```
 
-`prod_environment.yaml`
+3. Run the following command in your terminal to encrypt the environment variables:
+
+```sh
+encrypt_env gen
+```
+
+**Note**: Ensure that you do not add the environment.yaml file to the assets section of your pubspec.yaml file to prevent it from being included in the final build of your application.
+
+## Merging
+
+You can merge a YAML file by providing an environment argument using the --environment option. For example, if you pass "prod" as the environment argument, the tool will merge the environment.yaml file with a prod_environment.yaml file, if it exists, into a single configuration.
 
 ```yaml
+# prod_environment.yaml
+
 environment:
   production: true
+  base_url: "https://api.example.com"
+  api_key: "your_production_api_key_here"
+  database_url: "your_production_database_url_here"
 ```
 
-After all of that, go to your new environment folder and via terminal, run
-
 ```sh
-$ encrypt_env gen
+encrypt_env gen --environment prod
 ```
 
-The generator always merge yaml's files, so when you use `encrypt_env gen --env prod`, actually
-you are merging the `environment.yaml` with `prod_environment.yaml`
+## More
 
-## Features
+Customize the encryption process by providing optional arguments:
+
+- `-e --environment`: Specify the environment name.
+- `-y --yaml`: Specify the YAML file name. Defaults to environment.
+- `--folder`: Specify the folder name. Defaults to environment.
+- `--file-path`: Specify the encrypted file path. Defaults to lib.
+- `--file`: Specify the encrypted file name. Defaults to environment.
+- `--format`: Specify the getter name format. Defaults to ssc.
+
+**Note**: Use the follow command for more information:
 
 ```sh
-# Generator
-$ encrypt_env gen
-$ encrypt_env gen --env prod
-$ encrypt_env gen --file-name environment
-$ encrypt_env gen --file-path ../lib
-$ encrypt_env gen --yaml-file-name environment
-$ encrypt_env gen --uppercase true
-
-# Show CLI version
-$ encrypt_env --version
-
-# Show usage help
-$ encrypt_env --help
+encrypt_env -h
 ```

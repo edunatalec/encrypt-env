@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 extension MapExtenstion on Map {
   Map merge(Map map) {
     final Map newMap = {...this, ...map};
@@ -9,5 +11,11 @@ extension MapExtenstion on Map {
     }
 
     return newMap;
+  }
+
+  String prettify() {
+    const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+
+    return encoder.convert(this);
   }
 }

@@ -1,55 +1,60 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:encrypt_env/src/utils/map.utils.dart';
-import 'package:encrypt_env/src/utils/string.utils.dart';
+import '../utils/map.utils.dart';
+import '../utils/string.utils.dart';
 import 'package:yaml/yaml.dart';
 
 import '../utils/encrypt.utils.dart';
+import 'generator.format.dart';
 import 'generator.response.dart';
 
 class Generator {
-  final String? _env;
-  final String _filePath;
-  final String _fileName;
-  final String _yamlFileName;
-  final bool _uppercase;
+  final String? env;
+  final GeneratorFormat format;
+  final String folderName;
+  final String yamlName;
+
+  final Directory _fileDir;
+  final File _file;
 
   Generator({
-    String? env,
+    required this.env,
+    required this.format,
+    required this.yamlName,
+    required this.folderName,
     required String filePath,
     required String fileName,
-    required String yamlFileName,
-    required bool uppercase,
-  })  : _env = env,
-        _filePath = filePath,
-        _fileName = fileName,
-        _yamlFileName = yamlFileName,
-        _uppercase = uppercase;
+  })  : _fileDir = Directory(filePath),
+        _file = File('$filePath/$fileName.dart');
 
   late Uint8List _salt;
 
-  String get _getFileName => '$_fileName.dart';
-  File get _file => File('$_filePath/$_getFileName');
-  Directory get _directory => Directory(_filePath);
+  Map get _getMappedDataFromYaml {
+    final YamlMap data = loadYaml(_readYamlFile());
+
+    if (env == null) {
+      return data;
+    }
+
+    final YamlMap envData = loadYaml(_readYamlFile(env));
+
+    return data.merge(envData);
+  }
 
   Future<GeneratorResponse> run() async {
-    final Map data = _readFileAndParseData();
+    final Map data = _getMappedDataFromYaml;
 
     final StringBuffer content = _generate(data);
 
-    const JsonEncoder encoder = JsonEncoder.withIndent('  ');
-    final String prettyJson = encoder.convert(data);
-
-    _directory.createSync();
+    _fileDir.createSync();
 
     _file
       ..createSync()
       ..writeAsStringSync(content.toString());
 
     return GeneratorResponse(
-      environment: prettyJson,
+      environment: data.prettify(),
       path: _file.path,
     );
   }
@@ -123,17 +128,21 @@ class Generator {
       final MapEntry entry = data.entries.elementAt(i);
       final bool isLast = i == data.entries.length - 1;
 
-      final String name = entry.key
-          .toString()
-          .transformGetter(private: private, uppercase: _uppercase);
+      final String name = _formatGetter(
+        entry.key,
+        format: format,
+        private: private,
+      );
 
       if (entry.value is Map) {
         final String text = entry.value.keys.fold('', (previusValue, element) {
           final String value = entry.value[element];
           final String enconded = stringToHex(element, _salt);
-          final String name = element
-              .toString()
-              .transformGetter(private: private, uppercase: _uppercase);
+          final String name = _formatGetter(
+            element,
+            format: format,
+            private: private,
+          );
 
           return '$previusValue'
               '\t\t\t// $element: $value\n'
@@ -181,32 +190,47 @@ class Generator {
     }
   }
 
-  String _readFile([String? env]) {
-    String fileName = '$_yamlFileName.yaml';
+  String _readYamlFile([String? env]) {
+    String name = '$yamlName.yaml';
 
     if (env != null) {
-      fileName = '${env}_$fileName';
+      name = '${env}_$name';
     }
 
+    final String path = '$folderName/$name';
+
     try {
-      return File(fileName).readAsStringSync();
+      return File(path).readAsStringSync();
     } catch (_) {
-      throw 'The $fileName does not exists';
+      throw '$path does not exist. Please check and try again.';
     }
   }
 
-  Map _readFileAndParseData() {
-    final String content = _readFile();
-    final YamlMap data = loadYaml(content);
+  String _formatGetter(
+    String text, {
+    required GeneratorFormat format,
+    bool private = false,
+  }) {
+    text = text
+        .trim()
+        .replaceAll('-', '_')
+        .split(regex)
+        .where((element) => element.isNotEmpty)
+        .toList()
+        .join('_');
 
-    if (_env == null) {
-      return data;
+    switch (format) {
+      case GeneratorFormat.snakeCase:
+        text = text.toLowerCase();
+        break;
+      case GeneratorFormat.camelCase:
+        text = text.toCamelCase();
+        break;
+      case GeneratorFormat.screamingSnakeCase:
+      default:
+        text = text.toUpperCase();
     }
 
-    final String mergeContent = _readFile(_env);
-
-    final YamlMap mergedData = loadYaml(mergeContent);
-
-    return data.merge(mergedData);
+    return '${private ? '_' : ''}$text';
   }
 }

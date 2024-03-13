@@ -2,6 +2,7 @@ import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 import '../generator/generator.dart';
+import '../generator/generator.format.dart';
 import '../generator/generator.response.dart';
 
 class GenerateCommand extends Command<int> {
@@ -12,25 +13,41 @@ class GenerateCommand extends Command<int> {
   }) : _logger = logger {
     argParser
       ..addOption(
-        'env',
-        help: 'The environment target',
+        'folder',
+        defaultsTo: 'environment',
+        help: 'Folder name',
+      )
+      ..addOption(
+        'yaml',
+        abbr: 'y',
+        defaultsTo: 'environment',
+        help: 'YAML file name',
+      )
+      ..addOption(
+        'environment',
+        abbr: 'e',
+        help: 'Environment name',
       )
       ..addOption(
         'file-path',
-        help: 'The generated file path',
+        defaultsTo: 'lib',
+        help: 'Encrypted file path',
       )
       ..addOption(
-        'file-name',
-        help: 'The generated file name',
+        'file',
+        defaultsTo: 'environment',
+        help: 'Encrypted file name',
       )
       ..addOption(
-        'yaml-file-name',
-        help: 'The yaml file name',
-      )
-      ..addOption(
-        'uppercase',
-        help: 'The getters name form. '
-            'Default value true, if false the name will be in camelCase',
+        'format',
+        allowed: ['ssc', 'cc', 'sc'],
+        allowedHelp: {
+          'ssc': 'SCREAMING_SNAKE_CASE',
+          'cc': 'camelCase',
+          'sc': 'snake_case',
+        },
+        defaultsTo: 'ssc',
+        help: 'Getter name format',
       );
   }
 
@@ -38,21 +55,20 @@ class GenerateCommand extends Command<int> {
   String get name => 'gen';
 
   @override
-  String get description => 'Generates an encrypt file based on a yaml file';
+  String get description => 'Generates an encrypt file based on a YAML file';
 
   @override
   Future<int> run() async {
     try {
-      bool uppercase = argResults?['uppercase'] == null
-          ? true
-          : argResults?['uppercase'] == 'true';
-
       final GeneratorResponse reponse = await Generator(
-        env: argResults?['env'],
-        fileName: argResults?['file-name'] ?? 'environment',
-        filePath: argResults?['file-path'] ?? '../lib',
-        yamlFileName: argResults?['yaml-file-name'] ?? 'environment',
-        uppercase: uppercase,
+        env: argResults?['environment'],
+        folderName: argResults?['folder'],
+        yamlName: argResults?['yaml'],
+        fileName: argResults?['file'],
+        filePath: argResults?['file-path'],
+        format: GeneratorFormat.values.firstWhere(
+          (format) => format.name == argResults?['format'],
+        ),
       ).run();
 
       _logger.success('Encrypted\n');

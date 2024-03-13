@@ -1,8 +1,10 @@
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:cli_completion/cli_completion.dart';
-import 'package:encrypt_env/src/commands/generate.command.dart';
-import 'package:encrypt_env/src/version.dart';
+import 'package:pub_updater/pub_updater.dart';
+import 'commands/generate.command.dart';
+import 'commands/update_command.dart';
+import 'version.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 const executableName = 'encrypt_env';
@@ -12,7 +14,9 @@ const description = 'An encrypted file generator.';
 class EncryptEnvCommandRunner extends CompletionCommandRunner<int> {
   EncryptEnvCommandRunner({
     Logger? logger,
+    PubUpdater? pubUpdater,
   })  : _logger = logger ?? Logger(),
+        _pubUpdater = pubUpdater ?? PubUpdater(),
         super(executableName, description) {
     argParser
       ..addFlag(
@@ -27,12 +31,14 @@ class EncryptEnvCommandRunner extends CompletionCommandRunner<int> {
       );
 
     addCommand(GenerateCommand(logger: _logger));
+    addCommand(UpdateCommand(logger: _logger, pubUpdater: _pubUpdater));
   }
 
   @override
   void printUsage() => _logger.info(usage);
 
   final Logger _logger;
+  final PubUpdater _pubUpdater;
 
   @override
   Future<int> run(Iterable<String> args) async {
@@ -108,6 +114,27 @@ class EncryptEnvCommandRunner extends CompletionCommandRunner<int> {
       exitCode = await super.runCommand(topLevelResults);
     }
 
+    // Check for updates
+    if (topLevelResults.command?.name != UpdateCommand.commandName) {
+      await _checkForUpdates();
+    }
+
     return exitCode;
+  }
+
+  Future<void> _checkForUpdates() async {
+    try {
+      final latestVersion = await _pubUpdater.getLatestVersion(packageName);
+      final isUpToDate = packageVersion == latestVersion;
+      if (!isUpToDate) {
+        _logger
+          ..info('')
+          ..info(
+            '''
+${lightYellow.wrap('Update available!')} ${lightCyan.wrap(packageVersion)} \u2192 ${lightCyan.wrap(latestVersion)}
+Run ${lightCyan.wrap('$executableName update')} to update''',
+          );
+      }
+    } catch (_) {}
   }
 }

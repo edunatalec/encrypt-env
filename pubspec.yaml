@@ -1,9 +1,8 @@
 name: encrypt_env
-description: An encrypted file generator.
-version: 1.0.1
+description: An encrypted file generator
+version: 1.1.0
 maintainer: Eduardo Natale Costa (@edunatalec)
 homepage: https://github.com/edunatalec/encrypt-env
-repository: https://github.com/edunatalec/encrypt-env
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -13,6 +12,7 @@ dependencies:
   cli_completion: ^0.5.0
   mason_logger: ^0.2.12
   yaml: ^3.1.2
+  pub_updater: ^0.4.0
 
 dev_dependencies:
   test: ^1.25.2
@@ -22,3 +22,8 @@ dev_dependencies:
 
 executables:
   encrypt_env:
+
+topics:
+  - encryption
+  - environment
+  - security
