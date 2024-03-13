@@ -1,6 +1,6 @@
 name: encrypt_env
 description: An encrypted file generator.
-version: 1.0.0
+version: 1.0.1
 maintainer: Eduardo Natale Costa (@edunatalec)
 homepage: https://github.com/edunatalec/encrypt-env
 repository: https://github.com/edunatalec/encrypt-env
