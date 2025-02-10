@@ -27,11 +27,5 @@ topics:
   - encryption
   - environment
   - security
-  - cli
-  - dart
-  - config
-  - yaml
-  - secrets
-  - cryptography
-  - automation
   - dotenv
+  - cryptography
