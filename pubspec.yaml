@@ -5,20 +5,20 @@ maintainer: Eduardo Natale Costa (@edunatalec)
 homepage: https://github.com/edunatalec/encrypt-env
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   args: ^2.4.2
-  cli_completion: ^0.5.0
-  mason_logger: ^0.2.12
+  cli_completion: ^0.5.1
+  mason_logger: ^0.3.2
   yaml: ^3.1.2
-  pub_updater: ^0.4.0
+  pub_updater: ^0.5.0
 
 dev_dependencies:
   test: ^1.25.2
   build_runner: ^2.4.8
   build_version: ^2.1.1
-  lints: ^3.0.0
+  lints: ^5.1.1
 
 executables:
   encrypt_env:
@@ -27,3 +27,11 @@ topics:
   - encryption
   - environment
   - security
+  - cli
+  - dart
+  - config
+  - yaml
+  - secrets
+  - cryptography
+  - automation
+  - dotenv
