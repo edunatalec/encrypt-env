@@ -1,3 +1,7 @@
+## [1.1.1] 2025-02-10
+
+- Update project
+
 ## [1.1.0] 2024-03-13
 
 - Enhance code for improved usability
