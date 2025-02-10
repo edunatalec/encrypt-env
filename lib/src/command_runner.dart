@@ -7,11 +7,25 @@ import 'commands/update_command.dart';
 import 'version.dart';
 import 'package:mason_logger/mason_logger.dart';
 
+/// Executable name used in the terminal.
 const executableName = 'encrypt_env';
+
+/// Package name, usually the same as the executable.
 const packageName = executableName;
+
+/// Brief description of the program.
 const description = 'An encrypted file generator.';
 
+/// Command runner for the `encrypt_env` CLI tool.
+///
+/// This class manages command-line argument parsing, handles commands,
+/// and provides features like verbose logging, version display,
+/// and automatic update checks.
 class EncryptEnvCommandRunner extends CompletionCommandRunner<int> {
+  /// Creates an instance of [EncryptEnvCommandRunner].
+  ///
+  /// Accepts an optional [logger] for logging and a [pubUpdater]
+  /// for checking package updates.
   EncryptEnvCommandRunner({
     Logger? logger,
     PubUpdater? pubUpdater,

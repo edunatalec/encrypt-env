@@ -9,15 +9,33 @@ import '../utils/encrypt.utils.dart';
 import 'generator.format.dart';
 import 'generator.response.dart';
 
+/// A class responsible for generating an encrypted file based on a YAML configuration.
+///
+/// This generator reads environment variables from a YAML file, applies encryption,
+/// and writes the data into a Dart file with getter methods.
 class Generator {
+  /// The target environment (optional).
   final String? env;
+
+  /// The format to be used for getter names.
   final GeneratorFormat format;
+
+  /// The folder where the YAML file is located.
   final String folderName;
+
+  /// The name of the YAML file (without extension).
   final String yamlName;
 
+  /// Directory where the encrypted file will be saved.
   final Directory _fileDir;
+
+  /// The encrypted Dart file that will be generated.
   final File _file;
 
+  /// Creates a new [Generator] instance.
+  ///
+  /// Requires the [env] (optional), [format], [yamlName], [folderName],
+  /// as well as [filePath] and [fileName] to define the output location.
   Generator({
     required this.env,
     required this.format,
@@ -28,20 +46,12 @@ class Generator {
   })  : _fileDir = Directory(filePath),
         _file = File('$filePath/$fileName.dart');
 
+  /// Randomly generated salt used for encryption.
   late Uint8List _salt;
 
-  Map get _getMappedDataFromYaml {
-    final YamlMap data = loadYaml(_readYamlFile());
-
-    if (env == null) {
-      return data;
-    }
-
-    final YamlMap envData = loadYaml(_readYamlFile(env));
-
-    return data.merge(envData);
-  }
-
+  /// Runs the generator, creating an encrypted Dart file.
+  ///
+  /// Reads the YAML data, encrypts it, and writes it to the output file.
   Future<GeneratorResponse> run() async {
     final Map data = _getMappedDataFromYaml;
 
@@ -57,6 +67,18 @@ class Generator {
       environment: data.prettify(),
       path: _file.path,
     );
+  }
+
+  Map get _getMappedDataFromYaml {
+    final YamlMap data = loadYaml(_readYamlFile());
+
+    if (env == null) {
+      return data;
+    }
+
+    final YamlMap envData = loadYaml(_readYamlFile(env));
+
+    return data.merge(envData);
   }
 
   StringBuffer _generate(Map data) {
@@ -227,8 +249,8 @@ class Generator {
         text = text.toCamelCase();
         break;
       case GeneratorFormat.screamingSnakeCase:
-      default:
         text = text.toUpperCase();
+        break;
     }
 
     return '${private ? '_' : ''}$text';

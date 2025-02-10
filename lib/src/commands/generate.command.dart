@@ -5,9 +5,17 @@ import '../generator/generator.dart';
 import '../generator/generator.format.dart';
 import '../generator/generator.response.dart';
 
+/// A command that generates an encrypted file based on a YAML configuration.
+///
+/// This command allows users to define an environment, file path,
+/// naming conventions, and output formats for the encrypted file.
 class GenerateCommand extends Command<int> {
+  /// Logger instance for logging messages.
   final Logger _logger;
 
+  /// Creates a new [GenerateCommand] instance.
+  ///
+  /// Accepts a required [logger] for displaying logs and execution results.
   GenerateCommand({
     required Logger logger,
   }) : _logger = logger {
