@@ -2,7 +2,7 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:cli_completion/cli_completion.dart';
 import 'package:pub_updater/pub_updater.dart';
-import 'commands/generate.command.dart';
+import 'commands/generate_command.dart';
 import 'commands/update_command.dart';
 import 'version.dart';
 import 'package:mason_logger/mason_logger.dart';

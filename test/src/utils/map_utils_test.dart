@@ -1,4 +1,4 @@
-import 'package:encrypt_env/src/utils/map.utils.dart';
+import 'package:encrypt_env/src/utils/map_utils.dart';
 import 'package:test/test.dart';
 
 void main() {

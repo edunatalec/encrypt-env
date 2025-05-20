@@ -2,8 +2,8 @@ import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 import '../generator/generator.dart';
-import '../generator/generator.format.dart';
-import '../generator/generator.response.dart';
+import '../generator/generator_format.dart';
+import '../generator/generator_response.dart';
 
 /// A command that generates an encrypted file based on a YAML configuration.
 ///

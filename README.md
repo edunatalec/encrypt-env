@@ -15,20 +15,20 @@ dart pub global activate encrypt_env
 
 1. Navigate to the root of your Flutter project and configure a folder named environment. Inside this folder, create a file named environment.yaml. This file will contain your sensitive environment variables.
 
-![Folder example](./assets/folder-example.png)
+<img src="./assets/folder-example.png">
 
 2. Add your sensitive environment variables to the environment.yaml file. For example:
 
 ```yaml
 environment:
-  base_url: "http://localhost:3000"
-  version: "1.0.0"
+  base_url: 'http://localhost:3000'
+  version: '1.0.0'
   production: false
   headers:
-    api-key: ""
-endpoints:
-  endpoint_a: ""
-  endpoint_b: ""
+    api-key: ''
+endpoint:
+  endpoint_a: ''
+  endpoint_b: ''
 ```
 
 3. Run the following command in your terminal to encrypt the environment variables:
@@ -48,9 +48,9 @@ You can merge a YAML file by providing an environment argument using the --envir
 
 environment:
   production: true
-  base_url: "https://api.example.com"
-  api_key: "your_production_api_key_here"
-  database_url: "your_production_database_url_here"
+  base_url: 'https://api.example.com'
+  api_key: 'your_production_api_key_here'
+  database_url: 'your_production_database_url_here'
 ```
 
 ```sh

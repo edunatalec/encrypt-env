@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import '../utils/map.utils.dart';
-import '../utils/string.utils.dart';
+import '../utils/map_utils.dart';
+import '../utils/string_utils.dart';
 import 'package:yaml/yaml.dart';
 
-import '../utils/encrypt.utils.dart';
-import 'generator.format.dart';
-import 'generator.response.dart';
+import '../utils/encrypt_utils.dart';
+import 'generator_format.dart';
+import 'generator_response.dart';
 
 /// A class responsible for generating an encrypted file based on a YAML configuration.
 ///
@@ -134,7 +134,7 @@ class Generator {
     final String name = key.toPascalCase();
 
     file.writeln('class $name {');
-    file.writeln('\t$name._();\n');
+    file.writeln('\t$name._(); // coverage:ignore-line\n');
 
     _buildGetters(file, map[key]);
 
