@@ -1,5 +1,5 @@
 /// Defines the available formats for generated getter names.
-enum GeneratorFormat {
+enum CaseStyle {
   /// Uses SCREAMING_SNAKE_CASE format.
   ///
   /// Example: `MY_VARIABLE_NAME`
@@ -20,6 +20,6 @@ enum GeneratorFormat {
   /// Used when specifying the format option in CLI.
   final String name;
 
-  /// Creates a [GeneratorFormat] with the associated short name.
-  const GeneratorFormat(this.name);
+  /// Creates a [CaseStyle] with the associated short name.
+  const CaseStyle(this.name);
 }
