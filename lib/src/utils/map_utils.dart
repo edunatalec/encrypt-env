@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:yaml/yaml.dart';
+
 /// Extension providing additional utilities for `Map` objects.
 extension MapExtenstion on Map {
   /// Merges the current map with another [map].
@@ -16,12 +18,12 @@ extension MapExtenstion on Map {
   /// final merged = map1.merge(map2);
   /// print(merged); // {a: 1, b: {c: 2, d: 3}, e: 4}
   /// ```
-  Map merge(Map map) {
-    final Map newMap = {...this, ...map};
+  Map<String, dynamic> merge(Map<String, dynamic> map) {
+    final Map<String, dynamic> newMap = {...this, ...map};
 
     for (final key in keys) {
-      if (map.containsKey(key) && map[key] is Map) {
-        newMap[key] = (this[key] as Map).merge(map[key]);
+      if (map.containsKey(key) && map[key] is Map<String, dynamic>) {
+        newMap[key] = (this[key] as Map<String, dynamic>).merge(map[key]);
       }
     }
 
@@ -48,5 +50,28 @@ extension MapExtenstion on Map {
     const JsonEncoder encoder = JsonEncoder.withIndent('  ');
 
     return encoder.convert(this);
+  }
+}
+
+/// Extension to convert a [YamlMap] into a Dart `Map<String, dynamic>`.
+extension YamlMapExtension on YamlMap {
+  /// Recursively converts this [YamlMap] into a `Map<String, dynamic>`.
+  Map<String, dynamic> convertToMap() {
+    return _deepConvert(this) as Map<String, dynamic>;
+  }
+
+  dynamic _deepConvert(dynamic value) {
+    if (value is YamlMap) {
+      return Map<String, dynamic>.fromEntries(
+        value.entries.map(
+          (entry) => MapEntry(
+            entry.key.toString(),
+            _deepConvert(entry.value),
+          ),
+        ),
+      );
+    } else {
+      return value;
+    }
   }
 }
