@@ -2,7 +2,7 @@ import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 import '../generator/generator.dart';
-import '../generator/generator_format.dart';
+import '../generator/case_style.dart';
 import '../generator/generator_response.dart';
 
 /// A command that generates an encrypted file based on a YAML configuration.
@@ -23,39 +23,39 @@ class GenerateCommand extends Command<int> {
       ..addOption(
         'folder',
         defaultsTo: 'environment',
-        help: 'Folder name',
+        help: 'Folder where the config file is located',
       )
       ..addOption(
-        'yaml',
-        abbr: 'y',
+        'config',
         defaultsTo: 'environment',
-        help: 'YAML file name',
+        help: 'Configuration file name',
       )
       ..addOption(
-        'environment',
+        'env',
         abbr: 'e',
-        help: 'Environment name',
+        help: 'Environment name (e.g. dev, staging, prod)',
       )
       ..addOption(
-        'file-path',
+        'out-dir',
         defaultsTo: 'lib',
-        help: 'Encrypted file path',
+        help: 'Output folder for the encrypted file',
       )
       ..addOption(
-        'file',
+        'out-file',
         defaultsTo: 'environment',
-        help: 'Encrypted file name',
+        help: 'Output encrypted file name',
       )
       ..addOption(
-        'format',
+        'style',
+        abbr: 's',
         allowed: ['ssc', 'cc', 'sc'],
         allowedHelp: {
           'ssc': 'SCREAMING_SNAKE_CASE',
           'cc': 'camelCase',
           'sc': 'snake_case',
         },
-        defaultsTo: 'ssc',
-        help: 'Getter name format',
+        defaultsTo: 'cc',
+        help: 'Getter name case style',
       );
   }
 
@@ -69,13 +69,13 @@ class GenerateCommand extends Command<int> {
   Future<int> run() async {
     try {
       final GeneratorResponse reponse = await Generator(
-        env: argResults?['environment'],
+        env: argResults?['env'],
         folderName: argResults?['folder'],
-        yamlName: argResults?['yaml'],
-        fileName: argResults?['file'],
-        filePath: argResults?['file-path'],
-        format: GeneratorFormat.values.firstWhere(
-          (format) => format.name == argResults?['format'],
+        configName: argResults?['config'],
+        outFile: argResults?['out-file'],
+        outDir: argResults?['out-dir'],
+        caseStyle: CaseStyle.values.firstWhere(
+          (format) => format.name == argResults?['style'],
         ),
       ).run();
 
