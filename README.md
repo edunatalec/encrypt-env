@@ -9,11 +9,9 @@
 - [How it works](#how-it-works)
 - [Setup](#setup)
   - [Basic example](#basic-example)
-- [Behavior Summary](#behavior-summary)
 - [Merging Environments](#merging-environments)
 - [Customization](#customization)
   - [Available Flags](#available-flags)
-  - [Formats](#formats)
 - [Help](#help)
 
 ## Installation
