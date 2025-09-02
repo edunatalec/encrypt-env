@@ -6,8 +6,8 @@
 ## Summary
 
 - [Installation](#installation)
-- [Setup](#setup)
 - [How it works](#how-it-works)
+- [Setup](#setup)
   - [Basic example](#basic-example)
 - [Behavior Summary](#behavior-summary)
 - [Merging Environments](#merging-environments)
@@ -24,9 +24,13 @@ Activate globally via Dart:
 dart pub global activate encrypt_env
 ```
 
+## How it works
+
+The `encrypt_env` CLI reads your `environment.yaml` and generates a Dart class with **static, strongly-typed getters** where **all values are encrypted** at compile time and only decrypted at runtime.
+
 ## Setup
 
-To use `encrypt_env`, you need to organize your project with a folder named `environment` and a file named `environment.yaml` inside it — as shown in the image below:
+You need to organize your project with a folder named `environment` and a file named `environment.yaml`, as shown in the image below:
 
 <img src="./assets/folder-example.png">
 
@@ -38,17 +42,11 @@ your_project/
 │   └── environment.yaml
 ```
 
-> Note: You can change the folder and file name by using the --folder and --yaml options when running the CLI.
-
-## How it works
-
-The `encrypt_env` CLI reads your `environment.yaml` and generates a Dart class with **static, strongly-typed getters** where **all values are encrypted** at compile time and only decrypted at runtime.
-
-Here's how each part is handled:
+> Note: You can change the folder and file name by using the --folder and --yaml options when running the CLI. For more details go to the section [Customization](#customization).
 
 ### Basic example
 
-Given the following `environment.yaml`:
+Given the following `environment/environment.yaml`:
 
 ```yaml
 environment:
@@ -62,79 +60,91 @@ endpoint:
   endpoint_b: 'endpoint-b-fake'
 ```
 
-The generated Dart file will contain a class like this:
+Then, in the root folder, run the following command:
+
+```sh
+encrypt_env gen
+```
+
+You should see the following log in the console:
+
+```json
+Encrypted
+
+{
+  "environment": {
+    "base_url": "http://localhost:3000",
+    "version": "1.0.0",
+    "production": false,
+    "headers": {
+      "api-key": "value"
+    }
+  },
+  "endpoint": {
+    "endpoint_a": "endpoint-a",
+    "endpoint_b": "endpoint-b"
+  }
+}
+
+✓ Path lib/environment.dart
+```
+
+As indicated in the log, the file `lib/environment.dart` has been generated:
 
 ```dart
-class Environment {
-	Environment._(); // coverage:ignore-line
-
-	/// BASE_URL: http://localhost:3000
-	static String get BASE_URL {
-		final List<int> encoded = [0x51, 0x17, 0x26, 0xd4, 0x4d, 0x3e, 0x7, 0x22, 0x1, 0x2a, 0xc3, 0x93, 0xf5, 0x86, 0xc7, 0x4c, 0xf5, 0xe7, 0xea, 0x38, 0x1];
+sealed class Environment {
+	/// baseUrl: http://localhost:3000
+	static String get baseUrl {
+		final List<int> encoded = [0xa1, 0x5, 0xa9, 0xdb, 0x7e, 0xb1, 0x64, 0x45, 0x80, 0xb, 0xb6, 0x87, 0xb3, 0xdf, 0x88, 0x6a, 0x29, 0xa7, 0x37, 0x78, 0x5a];
 
 		return _decode(encoded);
 	}
 
-	/// VERSION: 1.0.0
-	static String get VERSION {
-		final List<int> encoded = [0x8, 0x4d, 0x62, 0x8a, 0x47];
+	/// version: 1.0.0
+	static String get version {
+		final List<int> encoded = [0xf8, 0x5f, 0xed, 0x85, 0x74];
 
 		return _decode(encoded);
 	}
 
-	/// PRODUCTION: false
-	static bool get PRODUCTION {
-		final List<int> encoded = [0x5f, 0x2, 0x3e, 0xd7, 0x12];
+	/// production: false
+	static bool get production {
+		final List<int> encoded = [0xaf, 0x10, 0xb1, 0xd8, 0x21];
 
-		return _decode(encoded) == _decode([0x4d, 0x11, 0x27, 0xc1]);
+		return _decode(encoded) == _decode([0xbd, 0x3, 0xa8, 0xce]);
 	}
 
-	static Map<String, dynamic> get HEADERS {
+	static Map<String, dynamic> get headers {
 		return {
-			// api-key: api-key-fake
-			_decode([0x58, 0x13, 0x3b, 0x89, 0x1c, 0x74, 0x51]): _API_KEY,
+			// api-key: value
+			_decode([0xa8, 0x1, 0xb4, 0x86, 0x2f, 0xfb, 0x32]): _apiKey,
 		};
 	}
 
-	/// _API_KEY: api-key-fake
-	static String get _API_KEY {
-		final List<int> encoded = [0x58, 0x13, 0x3b, 0x89, 0x1c, 0x74, 0x51, 0x63, 0x8, 0x28, 0xc9, 0x9a];
+	/// _apiKey: value
+	static String get _apiKey {
+		final List<int> encoded = [0xbf, 0x10, 0xb1, 0xde, 0x21];
 
 		return _decode(encoded);
 	}
 }
 
-class Endpoint {
-	Endpoint._(); // coverage:ignore-line
-
-	/// ENDPOINT_A: endpoint-a-fake
-	static String get ENDPOINT_A {
-		final List<int> encoded = [0x5c, 0xd, 0x36, 0xd4, 0x18, 0x78, 0x46, 0x3a, 0x43, 0x28, 0x8f, 0x99, 0xfc, 0x82, 0xd1];
+sealed class Endpoint {
+	/// endpointA: endpoint-a
+	static String get endpointA {
+		final List<int> encoded = [0xac, 0x1f, 0xb9, 0xdb, 0x2b, 0xf7, 0x25, 0x5d, 0xc2, 0x9];
 
 		return _decode(encoded);
 	}
 
-	/// ENDPOINT_B: endpoint-b-fake
-	static String get ENDPOINT_B {
-		final List<int> encoded = [0x5c, 0xd, 0x36, 0xd4, 0x18, 0x78, 0x46, 0x3a, 0x43, 0x2b, 0x8f, 0x99, 0xfc, 0x82, 0xd1];
+	/// endpointB: endpoint-b
+	static String get endpointB {
+		final List<int> encoded = [0xac, 0x1f, 0xb9, 0xdb, 0x2b, 0xf7, 0x25, 0x5d, 0xc2, 0xa];
 
 		return _decode(encoded);
 	}
 }
 ```
-
-## Behavior Summary
-
-This table explains how each type of value in your `environment.yaml` is treated in the generated Dart code:
-
-| YAML Input Type        | Dart Output Type       | Description                                                           |
-| ---------------------- | ---------------------- | --------------------------------------------------------------------- |
-| `String`               | `String`               | Encrypted and returned as-is                                          |
-| `bool`                 | `bool`                 | Encrypted and returned as a boolean                                   |
-| `int`, `double`, `num` | `String`               | Encrypted and returned as a string (no type casting)                  |
-| `Map<String, dynamic>` | `Map<String, dynamic>` | Keys and values are both encrypted individually and returned as a map |
-
-> All values — including keys inside maps — are encrypted and decrypted at runtime.
 
 ## Merging Environments
 
@@ -185,24 +195,14 @@ You can customize how the CLI reads and writes files using optional flags.
 
 ### Available Flags
 
-| Flag                  | Default       | Description                                       |
-| --------------------- | ------------- | ------------------------------------------------- |
-| `--folder`            | `environment` | Folder containing your YAML files                 |
-| `-y`, `--yaml`        | `environment` | Base YAML file name (without `.yaml` extension)   |
-| `-e`, `--environment` | _none_        | Optional environment prefix to merge files        |
-| `--file-path`         | `lib`         | Output directory for the generated Dart file      |
-| `--file`              | `environment` | Output Dart file name (without `.dart` extension) |
-| `--format`            | `ssc`         | Getter naming format: `ssc`, `cc`, or `sc`        |
-
-### Formats:
-
-| Format | Description          | Example   |
-| ------ | -------------------- | --------- |
-| `ssc`  | SCREAMING_SNAKE_CASE | `API_KEY` |
-| `cc`   | camelCase            | `apiKey`  |
-| `sc`   | snake_case           | `api_key` |
-
-> These options allow you to adapt the CLI to any project structure or naming convention.
+| Flag                  | Default       | Description                                                                            |
+| --------------------- | ------------- | -------------------------------------------------------------------------------------- |
+| `--folder`            | `environment` | Folder containing your configuration files                                             |
+| `--config`            | `environment` | Base config file name (without `.yaml` extension)                                      |
+| `-e`, `--environment` | _none_        | Optional environment name to merge (e.g., `dev`, `prod`)                               |
+| `--out-dir`           | `lib`         | Output directory for the generated Dart file                                           |
+| `--out-file`          | `environment` | Output Dart file name (without `.dart` extension)                                      |
+| `-s`, `--style`       | `cc`          | Getter naming style: `ssc` (SCREAMING_SNAKE_CASE), `cc` (camelCase), `sc` (snake_case) |
 
 ## Help
 
