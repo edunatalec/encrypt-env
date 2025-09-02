@@ -54,10 +54,10 @@ environment:
   version: '1.0.0'
   production: false
   headers:
-    api-key: 'api-key-fake'
+    api-key: 'value'
 endpoint:
-  endpoint_a: 'endpoint-a-fake'
-  endpoint_b: 'endpoint-b-fake'
+  endpoint_a: 'endpoint-a'
+  endpoint_b: 'endpoint-b'
 ```
 
 Then, in the root folder, run the following command:
@@ -95,35 +95,35 @@ As indicated in the log, the file `lib/environment.dart` has been generated:
 sealed class Environment {
 	/// baseUrl: http://localhost:3000
 	static String get baseUrl {
-		final List<int> encoded = [0xa1, 0x5, 0xa9, 0xdb, 0x7e, 0xb1, 0x64, 0x45, 0x80, 0xb, 0xb6, 0x87, 0xb3, 0xdf, 0x88, 0x6a, 0x29, 0xa7, 0x37, 0x78, 0x5a];
+		final List<int> encoded = [0xd5, 0x98, 0x52, 0x52, 0xe6, 0x31, 0x9a, 0x43, 0x4, 0x9b, 0xc0, 0x80, 0x11, 0xf9, 0x2c, 0xeb, 0xd2, 0xa3, 0x2c, 0x1e, 0x38];
 
 		return _decode(encoded);
 	}
 
 	/// version: 1.0.0
 	static String get version {
-		final List<int> encoded = [0xf8, 0x5f, 0xed, 0x85, 0x74];
+		final List<int> encoded = [0x8c, 0xc2, 0x16, 0xc, 0xec];
 
 		return _decode(encoded);
 	}
 
 	/// production: false
 	static bool get production {
-		final List<int> encoded = [0xaf, 0x10, 0xb1, 0xd8, 0x21];
+		final List<int> encoded = [0xdb, 0x8d, 0x4a, 0x51, 0xb9];
 
-		return _decode(encoded) == _decode([0xbd, 0x3, 0xa8, 0xce]);
+		return bool.parse(_decode(encoded));
 	}
 
 	static Map<String, dynamic> get headers {
 		return {
 			// api-key: value
-			_decode([0xa8, 0x1, 0xb4, 0x86, 0x2f, 0xfb, 0x32]): _apiKey,
+			_decode([0xdc, 0x9c, 0x4f, 0xf, 0xb7, 0x7b, 0xcc]): _apiKey,
 		};
 	}
 
 	/// _apiKey: value
 	static String get _apiKey {
-		final List<int> encoded = [0xbf, 0x10, 0xb1, 0xde, 0x21];
+		final List<int> encoded = [0xcb, 0x8d, 0x4a, 0x57, 0xb9];
 
 		return _decode(encoded);
 	}
@@ -132,14 +132,14 @@ sealed class Environment {
 sealed class Endpoint {
 	/// endpointA: endpoint-a
 	static String get endpointA {
-		final List<int> encoded = [0xac, 0x1f, 0xb9, 0xdb, 0x2b, 0xf7, 0x25, 0x5d, 0xc2, 0x9];
+		final List<int> encoded = [0xd8, 0x82, 0x42, 0x52, 0xb3, 0x77, 0xdb, 0x5b, 0x46, 0x99];
 
 		return _decode(encoded);
 	}
 
 	/// endpointB: endpoint-b
 	static String get endpointB {
-		final List<int> encoded = [0xac, 0x1f, 0xb9, 0xdb, 0x2b, 0xf7, 0x25, 0x5d, 0xc2, 0xa];
+		final List<int> encoded = [0xd8, 0x82, 0x42, 0x52, 0xb3, 0x77, 0xdb, 0x5b, 0x46, 0x9a];
 
 		return _decode(encoded);
 	}
@@ -161,8 +161,8 @@ environment:
   api_key: 'your_dev_api_key_here'
   database_url: 'your_dev_database_url_here'
 endpoint:
-  endpoint_a: 'endpoint-a-fake'
-  endpoint_b: 'endpoint-b-fake'
+  endpoint_a: 'endpoint-a'
+  endpoint_b: 'endpoint-b'
 ```
 
 ```yaml
