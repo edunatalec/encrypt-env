@@ -3,22 +3,22 @@ import 'package:test/test.dart';
 
 void main() {
   test('toPascalCase function', () {
-    expect('hello_world'.toPascalCase(), equals('HelloWorld'));
-    expect('hello_world_example_'.toPascalCase(), equals('HelloWorldExample'));
-    expect('camel_case_example '.toPascalCase(), equals('CamelCaseExample'));
-    expect('       SNAKE_CASE       '.toPascalCase(), equals('SnakeCase'));
-    expect(''.toPascalCase(), equals(''));
-    expect('__'.toPascalCase(), equals(''));
-    expect('_-'.toPascalCase(), equals(''));
+    expect('hello_world'.toPascalCase(), 'HelloWorld');
+    expect('hello_world_example_'.toPascalCase(), 'HelloWorldExample');
+    expect('camel_case_example '.toPascalCase(), 'CamelCaseExample');
+    expect('       SNAKE_CASE       '.toPascalCase(), 'SnakeCase');
+    expect(''.toPascalCase(), '');
+    expect('__'.toPascalCase(), '');
+    expect('_-'.toPascalCase(), '');
   });
 
   test('toCamelCase function', () {
-    expect('hello_world'.toCamelCase(), equals('helloWorld'));
-    expect('hello_world_example_'.toCamelCase(), equals('helloWorldExample'));
-    expect('camel_case_example '.toCamelCase(), equals('camelCaseExample'));
-    expect('       SNAKE_CASE       '.toCamelCase(), equals('snakeCase'));
-    expect(''.toCamelCase(), equals(''));
-    expect('__'.toCamelCase(), equals(''));
-    expect('_-'.toCamelCase(), equals(''));
+    expect('hello_world'.toCamelCase(), 'helloWorld');
+    expect('hello_world_example_'.toCamelCase(), 'helloWorldExample');
+    expect('camel_case_example '.toCamelCase(), 'camelCaseExample');
+    expect('       SNAKE_CASE       '.toCamelCase(), 'snakeCase');
+    expect(''.toCamelCase(), '');
+    expect('__'.toCamelCase(), '');
+    expect('_-'.toCamelCase(), '');
   });
 }
