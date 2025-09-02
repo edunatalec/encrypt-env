@@ -6,7 +6,7 @@ import '../utils/string_utils.dart';
 import 'package:yaml/yaml.dart';
 
 import '../utils/encrypt_utils.dart';
-import 'generator_format.dart';
+import 'case_style.dart';
 import 'generator_response.dart';
 
 /// A class responsible for generating an encrypted file based on a YAML configuration.
@@ -18,13 +18,13 @@ class Generator {
   final String? env;
 
   /// The format to be used for getter names.
-  final GeneratorFormat format;
+  final CaseStyle caseStyle;
 
   /// The folder where the YAML file is located.
   final String folderName;
 
   /// The name of the YAML file (without extension).
-  final String yamlName;
+  final String configName;
 
   /// Directory where the encrypted file will be saved.
   final Directory _fileDir;
@@ -34,17 +34,17 @@ class Generator {
 
   /// Creates a new [Generator] instance.
   ///
-  /// Requires the [env] (optional), [format], [yamlName], [folderName],
-  /// as well as [filePath] and [fileName] to define the output location.
+  /// Requires the [env] (optional), [caseStyle], [configName], [folderName],
+  /// as well as [outDir] and [outFile] to define the output location.
   Generator({
     required this.env,
-    required this.format,
-    required this.yamlName,
+    required this.caseStyle,
+    required this.configName,
     required this.folderName,
-    required String filePath,
-    required String fileName,
-  })  : _fileDir = Directory(filePath),
-        _file = File('$filePath/$fileName.dart');
+    required String outDir,
+    required String outFile,
+  })  : _fileDir = Directory(outDir),
+        _file = File('$outDir/$outFile.dart');
 
   /// Randomly generated salt used for encryption.
   late Uint8List _salt;
@@ -53,15 +53,13 @@ class Generator {
   ///
   /// Reads the YAML data, encrypts it, and writes it to the output file.
   Future<GeneratorResponse> run() async {
-    final Map data = _getMappedDataFromYaml;
+    final Map<String, dynamic> data = await _getDataFromConfigFile();
+
+    _salt = randomBytes(keyBytesSize);
 
     final StringBuffer content = _generate(data);
 
-    _fileDir.createSync();
-
-    _file
-      ..createSync()
-      ..writeAsStringSync(content.toString());
+    await _createEncryptedFile(content);
 
     return GeneratorResponse(
       environment: data.prettify(),
@@ -69,22 +67,31 @@ class Generator {
     );
   }
 
-  Map get _getMappedDataFromYaml {
-    final YamlMap data = loadYaml(_readYamlFile());
+  Future<void> _createEncryptedFile(StringBuffer content) async {
+    await _fileDir.create();
 
-    if (env == null) {
-      return data;
-    }
-
-    final YamlMap envData = loadYaml(_readYamlFile(env));
-
-    return data.merge(envData);
+    await _file.create();
+    await _file.writeAsString(content.toString());
   }
 
-  StringBuffer _generate(Map data) {
-    _salt = randomBytes(keyBytesSize);
+  Future<Map<String, dynamic>> _getDataFromConfigFile() async {
+    try {
+      final YamlMap data = loadYaml(await _readConfigFile());
 
-    final StringBuffer file = StringBuffer();
+      if (env == null) {
+        return data.convertToMap();
+      }
+
+      final YamlMap envData = loadYaml(await _readConfigFile(env));
+
+      return data.convertToMap().merge(envData.convertToMap());
+    } catch (_) {
+      throw 'You must provide a valid YAML configuration. For more details, see the documentation at https://pub.dev/packages/encrypt_env.';
+    }
+  }
+
+  StringBuffer _generate(Map<String, dynamic> data) {
+    final file = StringBuffer();
 
     _buildHeader(file);
     _buildBody(file, data);
@@ -97,19 +104,17 @@ class Generator {
     file.writeln(
       '/* ******************************************** */\n'
       '/* -- GENERATED CODE - DO NOT MODIFY BY HAND -- */\n'
-      '/* ******************************************** */\n',
+      '/* ******************************************** */\n'
+      "\nimport 'dart:convert';\n",
     );
-
-    final List<String> imports = ["import 'dart:convert';"];
-
-    file.writeln("${imports.join('\n')}\n");
   }
 
-  void _buildBody(StringBuffer file, Map data) {
+  void _buildBody(StringBuffer file, Map<String, dynamic> data) {
     for (final entry in data.entries) {
-      final Map map = Map.fromEntries([entry]);
+      final Map<String, dynamic> value =
+          Map<String, dynamic>.fromEntries([entry]);
 
-      _buildClass(file, map);
+      _buildClass(file, value);
     }
   }
 
@@ -129,12 +134,11 @@ class Generator {
     );
   }
 
-  void _buildClass(StringBuffer file, Map map) {
-    final String key = map.keys.first.toString();
+  void _buildClass(StringBuffer file, Map<String, dynamic> map) {
+    final String key = map.keys.first;
     final String name = key.toPascalCase();
 
-    file.writeln('class $name {');
-    file.writeln('\t$name._(); // coverage:ignore-line\n');
+    file.writeln('sealed class $name {');
 
     _buildGetters(file, map[key]);
 
@@ -143,26 +147,25 @@ class Generator {
 
   void _buildGetters(
     StringBuffer file,
-    Map data, {
+    Map<String, dynamic> map, {
     bool private = false,
   }) {
-    for (int i = 0; i < data.entries.length; i++) {
-      final MapEntry entry = data.entries.elementAt(i);
-      final bool isLast = i == data.entries.length - 1;
+    for (int i = 0; i < map.entries.length; i++) {
+      final MapEntry entry = map.entries.elementAt(i);
+
+      final bool isLast = i == map.entries.length - 1;
 
       final String name = _formatGetter(
         entry.key,
-        format: format,
         private: private,
       );
 
-      if (entry.value is Map) {
+      if (entry.value is Map<String, dynamic>) {
         final String text = entry.value.keys.fold('', (previusValue, element) {
-          final String value = entry.value[element];
+          final dynamic value = entry.value[element];
           final String enconded = stringToHex(element, _salt);
           final String name = _formatGetter(
             element,
-            format: format,
             private: private,
           );
 
@@ -181,26 +184,21 @@ class Generator {
 
         _buildGetters(file, entry.value, private: true);
       } else {
-        final bool isBool = entry.value is bool;
-
         final String encoded = stringToHex(entry.value.toString(), _salt);
 
         String text = '\t/// $name: ${entry.value}\n'
-            '\tstatic ${isBool ? 'bool' : 'String'} get $name {\n'
+            '\tstatic ${entry.value.runtimeType} get $name {\n'
             '\t\tfinal List<int> encoded = [$encoded];\n'
             '\n';
 
-        String decode = '\t\treturn _decode(encoded)';
+        String decode = '\t\treturn _decode(encoded);';
 
-        if (isBool) {
-          final String trueEnconded = stringToHex('true', _salt);
-
-          decode += ' == _decode([$trueEnconded])';
+        if (entry.value is! String) {
+          decode =
+              '\t\treturn ${entry.value.runtimeType}.parse(_decode(encoded));';
         }
 
-        decode += ';\n';
-
-        text += '$decode'
+        text += '$decode\n'
             '\t}\n';
 
         if (isLast) {
@@ -212,8 +210,8 @@ class Generator {
     }
   }
 
-  String _readYamlFile([String? env]) {
-    String name = '$yamlName.yaml';
+  Future<String> _readConfigFile([String? env]) async {
+    String name = '$configName.yaml';
 
     if (env != null) {
       name = '${env}_$name';
@@ -222,7 +220,7 @@ class Generator {
     final String path = '$folderName/$name';
 
     try {
-      return File(path).readAsStringSync();
+      return File(path).readAsString();
     } catch (_) {
       throw '$path does not exist. Please check and try again.';
     }
@@ -230,29 +228,26 @@ class Generator {
 
   String _formatGetter(
     String text, {
-    required GeneratorFormat format,
     bool private = false,
   }) {
-    text = text
-        .trim()
-        .replaceAll('-', '_')
-        .split(regex)
-        .where((element) => element.isNotEmpty)
-        .toList()
-        .join('_');
+    text = text.replaceAll(' ', '_');
 
-    switch (format) {
-      case GeneratorFormat.snakeCase:
-        text = text.toLowerCase();
+    switch (caseStyle) {
+      case CaseStyle.snakeCase:
+        text = text.toSnakeCase().toLowerCase();
         break;
-      case GeneratorFormat.camelCase:
+      case CaseStyle.camelCase:
         text = text.toCamelCase();
         break;
-      case GeneratorFormat.screamingSnakeCase:
-        text = text.toUpperCase();
+      case CaseStyle.screamingSnakeCase:
+        text = text.toSnakeCase().toUpperCase();
         break;
     }
 
-    return '${private ? '_' : ''}$text';
+    if (private) {
+      text = '_$text';
+    }
+
+    return text;
   }
 }
