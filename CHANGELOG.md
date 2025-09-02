@@ -1,3 +1,7 @@
+## [2.0.2] 2025-09-02
+
+- Updated documentation
+
 ## [2.0.1] 2025-09-02
 
 - Updated documentation
