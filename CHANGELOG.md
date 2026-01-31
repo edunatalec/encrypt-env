@@ -1,8 +1,18 @@
+## [2.1.0] 2026-01-31
+
+### Fixed
+
+- Correct toCamelCase behavior for strings with length <= 2
+
 ## [2.0.2] 2025-09-02
+
+### Changed
 
 - Updated documentation
 
 ## [2.0.1] 2025-09-02
+
+### Changed
 
 - Updated documentation
 
