@@ -37,7 +37,9 @@ extension StringExtension on String {
   String toCamelCase() {
     final String text = toPascalCase();
 
-    return text.length <= 2 ? text : text[0].toLowerCase() + text.substring(1);
+    return text.length <= 2
+        ? text.toLowerCase()
+        : text[0].toLowerCase() + text.substring(1);
   }
 
   /// Converts the current [String] into `snake_case`.
