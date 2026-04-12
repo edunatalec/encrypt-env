@@ -1,0 +1,127 @@
+import 'dart:io';
+
+import 'package:encrypt_env/src/config/config_reader.dart';
+import 'package:encrypt_env/src/generator/case_style.dart';
+import 'package:encrypt_env/src/generator/code_builder.dart';
+import 'package:encrypt_env/src/generator/generator.dart';
+import 'package:encrypt_env/src/strategy/xor_strategy.dart';
+import 'package:test/test.dart';
+
+void main() {
+  late Directory tempDir;
+  late Directory outDir;
+
+  setUp(() {
+    tempDir = Directory.systemTemp.createTempSync('generator_test_');
+    outDir = Directory('${tempDir.path}/output');
+  });
+
+  tearDown(() {
+    tempDir.deleteSync(recursive: true);
+  });
+
+  group('run', () {
+    test('creates the output Dart file', () async {
+      File('${tempDir.path}/environment.yaml').writeAsStringSync(
+        'app:\n  base_url: http://localhost\n  port: 3000',
+      );
+
+      final generator = Generator(
+        configReader: ConfigReader(
+          folderName: tempDir.path,
+          configName: 'environment',
+        ),
+        codeBuilder: CodeBuilder(
+          caseStyle: CaseStyle.camelCase,
+          strategy: XorStrategy(),
+        ),
+        outDir: outDir.path,
+        outFile: 'environment',
+      );
+
+      final response = await generator.run();
+
+      expect(File('${outDir.path}/environment.dart').existsSync(), isTrue);
+      expect(response.path, '${outDir.path}/environment.dart');
+    });
+
+    test('generated file contains expected class', () async {
+      File('${tempDir.path}/environment.yaml').writeAsStringSync(
+        'app:\n  base_url: http://localhost\n  debug: true',
+      );
+
+      final generator = Generator(
+        configReader: ConfigReader(
+          folderName: tempDir.path,
+          configName: 'environment',
+        ),
+        codeBuilder: CodeBuilder(
+          caseStyle: CaseStyle.camelCase,
+          strategy: XorStrategy(),
+        ),
+        outDir: outDir.path,
+        outFile: 'environment',
+      );
+
+      await generator.run();
+
+      final content =
+          File('${outDir.path}/environment.dart').readAsStringSync();
+      expect(content, contains('sealed class App'));
+      expect(content, contains('static String get baseUrl'));
+      expect(content, contains('static bool get debug'));
+    });
+
+    test('response environment contains prettified JSON', () async {
+      File('${tempDir.path}/environment.yaml').writeAsStringSync(
+        'config:\n  name: test\n  value: 42',
+      );
+
+      final generator = Generator(
+        configReader: ConfigReader(
+          folderName: tempDir.path,
+          configName: 'environment',
+        ),
+        codeBuilder: CodeBuilder(
+          caseStyle: CaseStyle.camelCase,
+          strategy: XorStrategy(),
+        ),
+        outDir: outDir.path,
+        outFile: 'environment',
+      );
+
+      final response = await generator.run();
+
+      expect(response.environment, contains('"name": "test"'));
+      expect(response.environment, contains('"value": 42'));
+    });
+
+    test('works with env merging', () async {
+      File('${tempDir.path}/environment.yaml').writeAsStringSync(
+        'app:\n  url: http://localhost\n  port: 3000',
+      );
+      File('${tempDir.path}/prod_environment.yaml').writeAsStringSync(
+        'app:\n  url: https://api.production.com',
+      );
+
+      final generator = Generator(
+        configReader: ConfigReader(
+          folderName: tempDir.path,
+          configName: 'environment',
+          env: 'prod',
+        ),
+        codeBuilder: CodeBuilder(
+          caseStyle: CaseStyle.camelCase,
+          strategy: XorStrategy(),
+        ),
+        outDir: outDir.path,
+        outFile: 'environment',
+      );
+
+      final response = await generator.run();
+
+      expect(response.environment, contains('https://api.production.com'));
+      expect(response.environment, contains('3000'));
+    });
+  });
+}

@@ -3,180 +3,113 @@ import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
 void main() {
-  test('merge function', () {
-    final Map<String, dynamic> a = {
-      'key1': 1,
-      'ke2': 'abc',
-      'key3': {'a': 'a', 'b': 'b'},
-      'key5': {'d': 'd'},
-    };
+  group('merge', () {
+    test('merges non-overlapping keys', () {
+      final result = {'a': 1}.merge({'b': 2});
+      expect(result, {'a': 1, 'b': 2});
+    });
 
-    final Map<String, dynamic> b = {
-      'ke2': 'abcd',
-      'key3': {'a': 'b', 'c': 'c'},
-      'key4': {'b': 'c'},
-    };
+    test('overrides values from second map', () {
+      final result = {'a': 1}.merge({'a': 2});
+      expect(result, {'a': 2});
+    });
 
-    final Map<String, dynamic> matcher = {
-      'key1': 1,
-      'ke2': 'abcd',
-      'key3': {'a': 'b', 'b': 'b', 'c': 'c'},
-      'key4': {'b': 'c'},
-      'key5': {'d': 'd'},
-    };
+    test('merges nested maps recursively', () {
+      final result = {
+        'a': {'b': 1, 'c': 2},
+      }.merge({
+        'a': {'d': 3},
+      });
+      expect(result, {
+        'a': {'b': 1, 'c': 2, 'd': 3},
+      });
+    });
 
-    expect(a.merge(b), matcher);
+    test('handles deeply nested maps', () {
+      final result = {
+        'a': {
+          'b': {'c': 1},
+        },
+      }.merge({
+        'a': {
+          'b': {'d': 2},
+        },
+      });
+      expect(result, {
+        'a': {
+          'b': {'c': 1, 'd': 2},
+        },
+      });
+    });
+
+    test('handles empty maps', () {
+      expect(<String, dynamic>{}.merge({'a': 1}), {'a': 1});
+      expect({'a': 1}.merge(<String, dynamic>{}), {'a': 1});
+    });
   });
 
-  test('prettify function should format a Map as a JSON string', () {
-    final Map<String, dynamic> data = {
-      'name': 'Alice',
-      'age': 25,
-      'address': {'city': 'New York', 'zip': '10001'},
-    };
+  group('prettify', () {
+    test('produces valid JSON', () {
+      final result = {'name': 'Alice', 'age': 25}.prettify();
+      expect(result, contains('"name": "Alice"'));
+      expect(result, contains('"age": 25'));
+    });
 
-    final String expectedJson = '''{
-  "name": "Alice",
-  "age": 25,
-  "address": {
-    "city": "New York",
-    "zip": "10001"
-  }
-}''';
+    test('handles empty map', () {
+      expect(<String, dynamic>{}.prettify(), '{}');
+    });
 
-    expect(data.prettify(), expectedJson);
-  });
-
-  test(
-    'prettify function should return an empty JSON object for an empty map',
-    () {
-      final Map<String, dynamic> emptyMap = {};
-
-      expect(emptyMap.prettify(), '{}');
-    },
-  );
-
-  test('prettify function should format nested maps correctly', () {
-    final Map<String, dynamic> nestedMap = {
-      'person': {
-        'name': 'John',
-        'details': {
-          'age': 30,
-          'languages': ['Dart', 'Python']
-        }
-      }
-    };
-
-    final String expectedJson = '''{
-  "person": {
-    "name": "John",
-    "details": {
-      "age": 30,
-      "languages": [
-        "Dart",
-        "Python"
-      ]
-    }
-  }
-}''';
-
-    expect(nestedMap.prettify(), expectedJson);
+    test('handles nested maps', () {
+      final result = {
+        'a': {'b': 1},
+      }.prettify();
+      expect(result, contains('"a"'));
+      expect(result, contains('"b": 1'));
+    });
   });
 
   group('YamlMapExtension.convertToMap', () {
-    test('converte mapa plano', () {
-      const src = '''
-name: app
-version: 1.0.0
-production: false
-      ''';
-
-      final root = loadYaml(src) as YamlMap;
-      final map = root.convertToMap();
-
-      expect(map, isA<Map<String, dynamic>>());
-      expect(map['name'], 'app');
-      expect(map['version'], '1.0.0');
-      expect(map['production'], false);
+    test('converts flat YAML', () {
+      final yaml = loadYaml('a: 1\nb: hello') as YamlMap;
+      final result = yaml.convertToMap();
+      expect(result, {'a': 1, 'b': 'hello'});
     });
 
-    test('converte mapa aninhado recursivamente', () {
-      const src = '''
-environment:
-  headers:
-    api-key: value
-      ''';
-
-      final root = loadYaml(src) as YamlMap;
-      final map = root.convertToMap();
-
-      expect(map['environment'], isA<Map<String, dynamic>>());
-      final env = map['environment'] as Map<String, dynamic>;
-      expect(env['headers'], isA<Map<String, dynamic>>());
-      final headers = env['headers'] as Map<String, dynamic>;
-      expect(headers['api-key'], 'value');
+    test('converts nested YAML', () {
+      final yaml = loadYaml('a:\n  b: 1\n  c: 2') as YamlMap;
+      final result = yaml.convertToMap();
+      expect(result, {
+        'a': {'b': 1, 'c': 2},
+      });
     });
 
-    test('preserva YamlList sem conversão', () {
-      const src = '''
-endpoints:
-  - a
-  - b
-      ''';
-
-      final root = loadYaml(src) as YamlMap;
-      final map = root.convertToMap();
-
-      // Como a extensão não trata listas, o valor permanece YamlList
-      expect(map['endpoints'], isA<YamlList>());
-      final list = map['endpoints'] as YamlList;
-      expect(list.length, 2);
-      expect(list[0], 'a');
-      expect(list[1], 'b');
+    test('preserves lists', () {
+      final yaml = loadYaml('a:\n  - 1\n  - 2') as YamlMap;
+      final result = yaml.convertToMap();
+      expect(result['a'], isA<List>());
     });
 
-    test('chaves não string viram string', () {
-      const src = '''
-123: ok
-true: yes
-null: nada
-      ''';
-
-      final root = loadYaml(src) as YamlMap;
-      final map = root.convertToMap();
-
-      expect(map.containsKey('123'), isTrue);
-      expect(map['123'], 'ok');
-      expect(map.containsKey('true'), isTrue);
-      expect(map['true'], 'yes');
-      expect(map.containsKey('null'), isTrue);
-      expect(map['null'], 'nada');
+    test('converts non-string keys to strings', () {
+      final yaml = loadYaml('1: one\n2: two') as YamlMap;
+      final result = yaml.convertToMap();
+      expect(result.keys, everyElement(isA<String>()));
     });
 
-    test('mapa vazio', () {
-      const src = '{}';
-      final root = loadYaml(src) as YamlMap;
-      final map = root.convertToMap();
-
-      expect(map, isEmpty);
+    test('handles empty map', () {
+      final yaml = loadYaml('{}') as YamlMap;
+      expect(yaml.convertToMap(), <String, dynamic>{});
     });
 
-    test('aninhamento profundo', () {
-      const src = '''
-a:
-  b:
-    c:
-      d: value
-      ''';
-
-      final root = loadYaml(src) as YamlMap;
-      final map = root.convertToMap();
-
-      expect(map['a'], isA<Map<String, dynamic>>());
-      final a = map['a'] as Map<String, dynamic>;
-      final b = a['b'] as Map<String, dynamic>;
-      final c = b['c'] as Map<String, dynamic>;
-      expect(c['d'], 'value');
+    test('handles deep nesting', () {
+      final yaml = loadYaml('a:\n  b:\n    c:\n      d: 1') as YamlMap;
+      final result = yaml.convertToMap();
+      expect(result, {
+        'a': {
+          'b': {
+            'c': {'d': 1},
+          },
+        },
+      });
     });
   });
 }

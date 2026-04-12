@@ -1,21 +1,18 @@
 import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-import '../generator/generator.dart';
+import '../config/config_reader.dart';
 import '../generator/case_style.dart';
-import '../generator/generator_response.dart';
+import '../generator/code_builder.dart';
+import '../generator/generator.dart';
+import '../strategy/xor_strategy.dart';
 
-/// A command that generates an encrypted file based on a YAML configuration.
-///
-/// This command allows users to define an environment, file path,
-/// naming conventions, and output formats for the encrypted file.
+/// A command that generates an obfuscated Dart file
+/// based on a YAML configuration.
 class GenerateCommand extends Command<int> {
-  /// Logger instance for logging messages.
   final Logger _logger;
 
   /// Creates a new [GenerateCommand] instance.
-  ///
-  /// Accepts a required [logger] for displaying logs and execution results.
   GenerateCommand({
     required Logger logger,
   }) : _logger = logger {
@@ -68,20 +65,31 @@ class GenerateCommand extends Command<int> {
   @override
   Future<int> run() async {
     try {
-      final GeneratorResponse reponse = await Generator(
-        env: argResults?['env'],
+      final strategy = XorStrategy();
+
+      final configReader = ConfigReader(
         folderName: argResults?['folder'],
         configName: argResults?['config'],
-        outFile: argResults?['out-file'],
-        outDir: argResults?['out-dir'],
+        env: argResults?['env'],
+      );
+
+      final codeBuilder = CodeBuilder(
         caseStyle: CaseStyle.values.firstWhere(
           (format) => format.name == argResults?['style'],
         ),
+        strategy: strategy,
+      );
+
+      final response = await Generator(
+        configReader: configReader,
+        codeBuilder: codeBuilder,
+        outDir: argResults?['out-dir'],
+        outFile: argResults?['out-file'],
       ).run();
 
       _logger.success('Encrypted\n');
-      _logger.info(reponse.environment);
-      _logger.success('\n✓ Path ${reponse.path}');
+      _logger.info(response.environment);
+      _logger.success('\n\u2713 Path ${response.path}');
 
       return ExitCode.success.code;
     } catch (error) {
