@@ -6,12 +6,15 @@
 
 - Strategy pattern architecture for obfuscation/encryption extensibility
 - Multi-layer XOR obfuscation: per-value salt, byte shuffle, derived key XOR
-- `ObfuscationStrategy` abstract interface for future encryption modes
+- AES-256-GCM encryption mode via `--encrypt --key <base64_key>` using [fortis](https://pub.dev/packages/fortis)
+- `AesStrategy` for real encryption with runtime key initialization
+- `ObfuscationStrategy` abstract interface for obfuscation/encryption extensibility
+- `--encrypt` flag and `--key` option in CLI
 - `ConfigReader` for independent YAML configuration loading
 - `CodeBuilder` for Dart source code generation
 - `bytes_utils.dart` with deterministic PRNG (`seedFromSalt`, `generatePermutation`)
-- Documentation in English, Portuguese, and Spanish (`doc/xor-obfuscation/`)
-- Comprehensive test suite rewritten from scratch (80 tests)
+- Documentation in English, Portuguese, and Spanish (`doc/xor-obfuscation/`, `doc/aes-encryption/`)
+- Comprehensive test suite rewritten from scratch (101 tests)
 
 ### Changed
 
