@@ -5,9 +5,11 @@ import '../config/config_reader.dart';
 import '../generator/case_style.dart';
 import '../generator/code_builder.dart';
 import '../generator/generator.dart';
+import '../strategy/aes_strategy.dart';
+import '../strategy/obfuscation_strategy.dart';
 import '../strategy/xor_strategy.dart';
 
-/// A command that generates an obfuscated Dart file
+/// A command that generates an obfuscated or encrypted Dart file
 /// based on a YAML configuration.
 class GenerateCommand extends Command<int> {
   final Logger _logger;
@@ -53,6 +55,15 @@ class GenerateCommand extends Command<int> {
         },
         defaultsTo: 'cc',
         help: 'Getter name case style',
+      )
+      ..addFlag(
+        'encrypt',
+        help: 'Use AES-256-GCM encryption instead of XOR obfuscation',
+      )
+      ..addOption(
+        'key',
+        abbr: 'k',
+        help: 'Base64 AES-256 key (required with --encrypt)',
       );
   }
 
@@ -65,7 +76,7 @@ class GenerateCommand extends Command<int> {
   @override
   Future<int> run() async {
     try {
-      final strategy = XorStrategy();
+      final strategy = _buildStrategy();
 
       final configReader = ConfigReader(
         folderName: argResults?['folder'],
@@ -97,5 +108,19 @@ class GenerateCommand extends Command<int> {
 
       return ExitCode.ioError.code;
     }
+  }
+
+  ObfuscationStrategy _buildStrategy() {
+    final useEncrypt = argResults?['encrypt'] == true;
+
+    if (!useEncrypt) return XorStrategy();
+
+    final key = argResults?['key'] as String?;
+
+    if (key == null || key.isEmpty) {
+      throw 'The --key option is required when using --encrypt.';
+    }
+
+    return AesStrategy(key: key);
   }
 }

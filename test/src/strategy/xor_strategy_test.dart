@@ -125,6 +125,24 @@ void main() {
     });
   });
 
+  group('buildGetterBody', () {
+    test('contains encoded list and salt fragments', () {
+      final encoded = strategy.encode('test');
+      final body = strategy.buildGetterBody(encoded);
+      expect(body, contains('final List<int> encoded'));
+      expect(body, contains('final List<int> salt'));
+      expect(body, contains('_decode(encoded, salt)'));
+    });
+  });
+
+  group('buildMapKeyDecode', () {
+    test('returns _decode expression', () {
+      final encoded = strategy.encode('key');
+      final expr = strategy.buildMapKeyDecode(encoded);
+      expect(expr, startsWith('_decode('));
+    });
+  });
+
   group('imports', () {
     test('is empty for XOR strategy', () {
       expect(strategy.imports, isEmpty);

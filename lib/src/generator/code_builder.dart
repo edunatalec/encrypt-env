@@ -88,12 +88,12 @@ class CodeBuilder {
     final text = map.keys.fold('', (prev, element) {
       final value = map[element];
       final encoded = strategy.encode(element);
-      final parts = encoded.split('|');
+      final decode = strategy.buildMapKeyDecode(encoded);
       final getterName = _formatGetter(element, private: private);
 
       return '$prev'
           '\t\t\t// $element: $value\n'
-          '\t\t\t_decode([${parts[0]}], [...[${parts[1]}], ...[${parts[2]}]]): _$getterName,\n';
+          '\t\t\t$decode: _$getterName,\n';
     });
 
     file.writeln(
@@ -114,22 +114,20 @@ class CodeBuilder {
     bool isLast = false,
   }) {
     final encoded = strategy.encode(entry.value.toString());
-    final parts = encoded.split('|');
+    var body = strategy.buildGetterBody(encoded);
+
+    if (entry.value is! String) {
+      body = body.replaceFirst(
+        'return ',
+        'return ${entry.value.runtimeType}.parse(',
+      );
+      body += ')';
+    }
 
     var text = '\t/// $name: ${entry.value}\n'
         '\tstatic ${entry.value.runtimeType} get $name {\n'
-        '\t\tfinal List<int> encoded = [${parts[0]}];\n'
-        '\t\tfinal List<int> salt = [...[${parts[1]}], ...[${parts[2]}]];\n'
-        '\n';
-
-    if (entry.value is String) {
-      text += '\t\treturn _decode(encoded, salt);';
-    } else {
-      text +=
-          '\t\treturn ${entry.value.runtimeType}.parse(_decode(encoded, salt));';
-    }
-
-    text += '\n\t}\n';
+        '$body;\n'
+        '\t}\n';
 
     if (isLast) {
       file.write(text);

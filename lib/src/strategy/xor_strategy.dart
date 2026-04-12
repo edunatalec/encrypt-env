@@ -78,6 +78,20 @@ List<int> _perm(int length, int seed) {
 }''';
 
   @override
+  String buildGetterBody(String encoded) {
+    final parts = encoded.split('|');
+    return '\t\tfinal List<int> encoded = [${parts[0]}];\n'
+        '\t\tfinal List<int> salt = [...[${parts[1]}], ...[${parts[2]}]];\n'
+        '\n'
+        '\t\treturn _decode(encoded, salt)';
+  }
+
+  @override
+  String buildMapKeyDecode(String encoded) {
+    final parts = encoded.split('|');
+    return '_decode([${parts[0]}], [...[${parts[1]}], ...[${parts[2]}]])';
+  }
+
   @override
   String get imports => '';
 

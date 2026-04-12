@@ -1,6 +1,8 @@
 import 'package:encrypt_env/src/generator/case_style.dart';
 import 'package:encrypt_env/src/generator/code_builder.dart';
+import 'package:encrypt_env/src/strategy/aes_strategy.dart';
 import 'package:encrypt_env/src/strategy/xor_strategy.dart';
+import 'package:fortis/fortis.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -125,6 +127,54 @@ void main() {
         'env': {'base_url': 'http://localhost'},
       });
       expect(result, contains('get BASE_URL'));
+    });
+  });
+
+  group('AES strategy', () {
+    late CodeBuilder aesBuilder;
+
+    setUp(() async {
+      final key = await Fortis.aes().keySize(256).generateKey();
+      aesBuilder = CodeBuilder(
+        caseStyle: CaseStyle.camelCase,
+        strategy: AesStrategy(key: key.toBase64()),
+      );
+    });
+
+    test('contains fortis import', () {
+      final result = aesBuilder.build({
+        'environment': {'key': 'value'},
+      });
+      expect(result, contains("import 'package:fortis/fortis.dart'"));
+    });
+
+    test('contains init function', () {
+      final result = aesBuilder.build({
+        'environment': {'key': 'value'},
+      });
+      expect(result, contains('void init('));
+    });
+
+    test('contains _cipher declaration', () {
+      final result = aesBuilder.build({
+        'environment': {'key': 'value'},
+      });
+      expect(result, contains('late AesCipher _cipher'));
+    });
+
+    test('getters use decryptToString', () {
+      final result = aesBuilder.build({
+        'environment': {'base_url': 'http://localhost'},
+      });
+      expect(result, contains('_cipher.decryptToString'));
+    });
+
+    test('generates typed getters with parse', () {
+      final result = aesBuilder.build({
+        'environment': {'port': 3000},
+      });
+      expect(result, contains('int.parse'));
+      expect(result, contains('_cipher.decryptToString'));
     });
   });
 }
