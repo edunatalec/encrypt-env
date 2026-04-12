@@ -1,10 +1,12 @@
 name: encrypt_env
-description: |
-  Generate encrypted files to secure sensitive configuration data. 
-  Encrypt YAML files and streamline the protection of sensitive information in Flutter applications.
-version: 2.1.0
-maintainer: Eduardo Natale Costa (@edunatalec)
+description: >
+  Generate obfuscated or encrypted Dart files from YAML configuration.
+  Protect sensitive data in Flutter/Dart applications with multi-layer XOR obfuscation
+  or AES-256 encryption.
+version: 3.0.0
 homepage: https://github.com/edunatalec/encrypt-env
+repository: https://github.com/edunatalec/encrypt-env
+issue_tracker: https://github.com/edunatalec/encrypt-env/issues
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -27,7 +29,7 @@ executables:
 
 topics:
   - encryption
+  - obfuscation
   - environment
   - security
   - dotenv
-  - cryptography
