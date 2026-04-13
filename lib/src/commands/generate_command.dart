@@ -98,23 +98,30 @@ class GenerateCommand extends Command<int> {
   @override
   Future<int> run() async {
     try {
+      // Input: where to read the config from
+      final configReader = ConfigReader(
+        folderName: _resolveOption(
+          'folder',
+          'Folder containing your config files:',
+        ),
+        configName: _resolveOption(
+          'config',
+          'Config file name (without extension):',
+        ),
+        env: _resolveOptional(
+          'env',
+          'Environment to merge (e.g. dev, prod — leave empty to skip):',
+        ),
+      );
+
+      // Processing: how to generate
       final useEncrypt = _resolveEncrypt();
       final strategy = await _buildStrategy(useEncrypt);
       final style = _resolveStyle();
-      final outFile = _resolveOption('out-file', 'Output file name:');
       final generateTest = argResults?['test'] == true;
 
       final caseStyle = CaseStyle.values.firstWhere(
         (format) => format.code == style,
-      );
-
-      final configReader = ConfigReader(
-        folderName: _resolveOption('folder', 'Config folder:'),
-        configName: _resolveOption('config', 'Config file name:'),
-        env: _resolveOptional(
-          'env',
-          'Environment name (leave empty to skip):',
-        ),
       );
 
       final codeBuilder = CodeBuilder(
@@ -122,7 +129,15 @@ class GenerateCommand extends Command<int> {
         strategy: strategy,
       );
 
-      final outDir = _resolveOption('out-dir', 'Output directory:');
+      // Output: where to write the generated file
+      final outDir = _resolveOption(
+        'out-dir',
+        'Output directory for generated Dart file:',
+      );
+      final outFile = _resolveOption(
+        'out-file',
+        'Output file name (without .dart):',
+      );
 
       TestBuilder? testBuilder;
 
