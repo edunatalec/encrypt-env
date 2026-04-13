@@ -7,9 +7,13 @@
 - Support for `.yml` and `.json` config file formats in addition to `.yaml`
 - Auto-detection of config file format with priority order: `.yaml` > `.yml` > `.json`
 - Base and environment-specific files can use different formats (e.g., base in `.yaml`, env override in `.json`)
+- Interactive prompt to enable/disable test file generation (`Generate test file?`)
+- Configuration examples in `example/README.md` with ready-to-use YAML and JSON templates
 
 ### Changed
 
+- Reordered interactive CLI flow: mode and style first, then config input, then output options
+- Improved interactive prompts with clearer descriptions (e.g., `Config file name (without extension):`, `Output file name (without .dart):`)
 - `ConfigReader` now probes for supported extensions instead of hardcoding `.yaml`
 - Error messages list all tried file paths when no config file is found
 - Updated CLI description and README to reflect multi-format support
