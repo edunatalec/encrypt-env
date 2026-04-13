@@ -15,7 +15,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: dart-lang/setup-dart@v2
+      - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
 
