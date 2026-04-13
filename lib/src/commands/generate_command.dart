@@ -100,7 +100,7 @@ class GenerateCommand extends Command<int> {
 
       final codeBuilder = CodeBuilder(
         caseStyle: CaseStyle.values.firstWhere(
-          (format) => format.name == style,
+          (format) => format.code == style,
         ),
         strategy: strategy,
       );

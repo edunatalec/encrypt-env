@@ -35,8 +35,8 @@ class ConfigReader {
       final YamlMap envData = loadYaml(await _readFile(env));
 
       return data.convertToMap().merge(envData.convertToMap());
-    } catch (_) {
-      throw 'You must provide a valid YAML configuration. '
+    } catch (e) {
+      throw 'Invalid YAML configuration: $e\n'
           'For more details, see the documentation at '
           'https://pub.dev/packages/encrypt_env.';
     }
@@ -53,8 +53,8 @@ class ConfigReader {
 
     try {
       return await File(path).readAsString();
-    } catch (_) {
-      throw '$path does not exist. Please check and try again.';
+    } catch (e) {
+      throw '$path does not exist: $e';
     }
   }
 }

@@ -18,8 +18,8 @@ enum CaseStyle {
   /// The short identifier for the format.
   ///
   /// Used when specifying the format option in CLI.
-  final String name;
+  final String code;
 
-  /// Creates a [CaseStyle] with the associated short name.
-  const CaseStyle(this.name);
+  /// Creates a [CaseStyle] with the associated short [code].
+  const CaseStyle(this.code);
 }

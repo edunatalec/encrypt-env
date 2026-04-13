@@ -44,24 +44,15 @@ extension StringExtension on String {
 
   /// Converts the current [String] into `snake_case`.
   ///
-  /// The conversion process:
-  /// - Trims leading and trailing whitespace.
-  /// - Splits the text into tokens using a regular expression (`regex`),
-  ///   filtering out empty segments.
-  /// - Joins the tokens with an underscore (`_`).
-  /// - Ensures the result starts with a lowercase character.
+  /// Splits on underscores (`_`) and hyphens (`-`), joins with underscores,
+  /// and lowercases the first character.
   ///
-  /// Returns:
-  /// - The transformed string in `snake_case`.
-  /// - If the string length is less than 2, returns it as-is.
+  /// If the string length is less than 2, returns it as-is.
   ///
   /// Example:
   /// ```dart
-  /// final text1 = "HelloWorld";
-  /// final text2 = "  multiple   words  here ";
-  ///
-  /// print(text1.toSnakeCase()); // "hello_World"
-  /// print(text2.toSnakeCase()); // "multiple_words_here"
+  /// print('hello-world'.toSnakeCase()); // "hello_world"
+  /// print('hello_world'.toSnakeCase()); // "hello_world"
   /// ```
   String toSnakeCase() {
     String text = trim()
