@@ -14,6 +14,7 @@
   - [Basic example](#basic-example)
 - [Merging environments](#merging-environments)
 - [Key generation](#key-generation)
+- [Test generation](#test-generation)
 - [Customization](#customization)
   - [Available flags](#available-flags)
 - [Documentation](#documentation)
@@ -216,6 +217,43 @@ AES-256 key generated:
 y67ImXMjCr1Uuo6jvF0pXBuomlshiwCgbwYQFRiUHbk=
 ```
 
+## Test generation
+
+By default, a test file is generated alongside the Dart file at `test/{out-file}_test.dart`. The CLI automatically detects your project type by reading `pubspec.yaml`:
+
+- **Flutter project** (has `flutter` dependency) → uses `package:flutter_test/flutter_test.dart`
+- **Dart project** → uses `package:test/test.dart`
+- **Package name** → uses `package:name/...` import style
+
+Example generated test:
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:my_app/environment.dart';
+
+void main() {
+  group('Environment', () {
+    test('baseUrl returns correct value', () {
+      expect(Environment.baseUrl, 'http://localhost:3000');
+    });
+
+    test('production returns correct value', () {
+      expect(Environment.production, false);
+    });
+
+    test('production returns bool', () {
+      expect(Environment.production, isA<bool>());
+    });
+  });
+}
+```
+
+To disable test generation:
+
+```sh
+encrypt_env gen --no-test
+```
+
 ## Customization
 
 ### Available flags
@@ -230,6 +268,7 @@ y67ImXMjCr1Uuo6jvF0pXBuomlshiwCgbwYQFRiUHbk=
 | `-s`, `--style` | `cc` | Getter naming style: `cc` (camelCase), `sc` (snake_case), `ssc` (SCREAMING_SNAKE_CASE) |
 | `--encrypt` | `false` | Use AES-256-GCM encryption instead of XOR obfuscation |
 | `-k`, `--key` | _none_ | Base64 AES-256 key (used with `--encrypt`) |
+| `--[no-]test` | `true` | Generate a test file alongside the Dart file |
 
 ## Documentation
 
