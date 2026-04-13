@@ -98,6 +98,20 @@ class GenerateCommand extends Command<int> {
   @override
   Future<int> run() async {
     try {
+      // Processing: how to generate
+      final useEncrypt = _resolveEncrypt();
+      final strategy = await _buildStrategy(useEncrypt);
+      final style = _resolveStyle();
+
+      final caseStyle = CaseStyle.values.firstWhere(
+        (format) => format.code == style,
+      );
+
+      final codeBuilder = CodeBuilder(
+        caseStyle: caseStyle,
+        strategy: strategy,
+      );
+
       // Input: where to read the config from
       final configReader = ConfigReader(
         folderName: _resolveOption(
@@ -114,21 +128,6 @@ class GenerateCommand extends Command<int> {
         ),
       );
 
-      // Processing: how to generate
-      final useEncrypt = _resolveEncrypt();
-      final strategy = await _buildStrategy(useEncrypt);
-      final style = _resolveStyle();
-      final generateTest = argResults?['test'] == true;
-
-      final caseStyle = CaseStyle.values.firstWhere(
-        (format) => format.code == style,
-      );
-
-      final codeBuilder = CodeBuilder(
-        caseStyle: caseStyle,
-        strategy: strategy,
-      );
-
       // Output: where to write the generated file
       final outDir = _resolveOption(
         'out-dir',
@@ -138,6 +137,7 @@ class GenerateCommand extends Command<int> {
         'out-file',
         'Output file name (without .dart):',
       );
+      final generateTest = _resolveTest();
 
       TestBuilder? testBuilder;
 
@@ -221,6 +221,12 @@ class GenerateCommand extends Command<int> {
       prompt,
       defaultValue: argResults?.option(name),
     );
+  }
+
+  bool _resolveTest() {
+    if (!_isInteractive) return argResults?['test'] == true;
+
+    return _logger.confirm('Generate test file?', defaultValue: true);
   }
 
   String? _resolveOptional(String name, String prompt) {
