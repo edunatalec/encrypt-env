@@ -90,7 +90,8 @@ class GenerateCommand extends Command<int> {
   String get name => 'gen';
 
   @override
-  String get description => 'Generates an encrypt file based on a YAML file';
+  String get description =>
+      'Generates an encrypt file based on a config file (YAML/JSON)';
 
   bool get _isInteractive => argResults?.arguments.isEmpty == true;
 

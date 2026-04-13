@@ -1,15 +1,18 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:yaml/yaml.dart';
 
 import '../utils/map_utils.dart';
 
-/// Reads and merges YAML configuration files.
+/// Reads and merges configuration files (YAML or JSON).
 class ConfigReader {
-  /// The folder where the YAML file is located.
+  static const _supportedExtensions = ['.yaml', '.yml', '.json'];
+
+  /// The folder where the config file is located.
   final String folderName;
 
-  /// The name of the YAML file (without extension).
+  /// The name of the config file (without extension).
   final String configName;
 
   /// The target environment (optional).
@@ -26,35 +29,52 @@ class ConfigReader {
   /// environment-specific file.
   Future<Map<String, dynamic>> read() async {
     try {
-      final YamlMap data = loadYaml(await _readFile());
+      final data = await _loadConfig();
 
-      if (env == null) {
-        return data.convertToMap();
-      }
+      if (env == null) return data;
 
-      final YamlMap envData = loadYaml(await _readFile(env));
+      final envData = await _loadConfig(env);
 
-      return data.convertToMap().merge(envData.convertToMap());
+      return data.merge(envData);
     } catch (e) {
-      throw 'Invalid YAML configuration: $e\n'
+      throw 'Invalid configuration: $e\n'
           'For more details, see the documentation at '
           'https://pub.dev/packages/encrypt_env.';
     }
   }
 
-  Future<String> _readFile([String? env]) async {
-    var name = '$configName.yaml';
+  Future<Map<String, dynamic>> _loadConfig([String? env]) async {
+    final baseName = env != null ? '${env}_$configName' : configName;
 
-    if (env != null) {
-      name = '${env}_$name';
+    for (final ext in _supportedExtensions) {
+      final path = '$folderName/$baseName$ext';
+      final file = File(path);
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        return _parse(content, ext);
+      }
     }
 
-    final path = '$folderName/$name';
+    final tried =
+        _supportedExtensions.map((ext) => '$folderName/$baseName$ext').join(
+              ', ',
+            );
 
-    try {
-      return await File(path).readAsString();
-    } catch (e) {
-      throw '$path does not exist: $e';
+    throw 'No config file found. Looked for: $tried';
+  }
+
+  Map<String, dynamic> _parse(String content, String extension) {
+    if (extension == '.json') {
+      final decoded = jsonDecode(content);
+
+      if (decoded is Map<String, dynamic>) return decoded;
+
+      throw 'JSON config must be a top-level object';
     }
+
+    final YamlMap data = loadYaml(content);
+
+    return data.convertToMap();
   }
 }
