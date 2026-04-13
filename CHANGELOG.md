@@ -10,11 +10,15 @@
 - `AesStrategy` for real encryption with runtime key initialization
 - `ObfuscationStrategy` abstract interface for obfuscation/encryption extensibility
 - `--encrypt` flag and `--key` option in CLI
+- `keygen` command to generate random AES-256 keys
+- Automatic test file generation (`test/{file}_test.dart`) with `--[no-]test` flag
+- Auto-detection of Flutter vs Dart projects and package name via `pubspec.yaml`
+- Interactive CLI mode when running `gen` without arguments
 - `ConfigReader` for independent YAML configuration loading
-- `CodeBuilder` for Dart source code generation
+- `CodeBuilder` and `TestBuilder` for Dart source code generation
 - `bytes_utils.dart` with deterministic PRNG (`seedFromSalt`, `generatePermutation`)
 - Documentation in English, Portuguese, and Spanish (`doc/xor-obfuscation/`, `doc/aes-encryption/`)
-- Comprehensive test suite rewritten from scratch (101 tests)
+- Comprehensive test suite rewritten from scratch
 
 ### Changed
 
