@@ -1,7 +1,7 @@
 [![pub package](https://img.shields.io/pub/v/encrypt_env.svg)](https://pub.dev/packages/encrypt_env)
 [![package publisher](https://img.shields.io/pub/publisher/encrypt_env.svg)](https://pub.dev/packages/encrypt_env/publisher)
 
-**encrypt_env** is a Dart CLI tool that generates obfuscated or encrypted Dart files from YAML configuration. It helps you protect API keys, secrets, tokens, and other sensitive data in Flutter and Dart applications.
+**encrypt_env** is a Dart CLI tool that generates obfuscated or encrypted Dart files from YAML or JSON configuration. It helps you protect API keys, secrets, tokens, and other sensitive data in Flutter and Dart applications.
 
 ## Summary
 
@@ -75,6 +75,12 @@ encrypt_env gen
 
 Values are obfuscated — not visible as plain text in the source code or binary, but not cryptographically secure. Ideal for base URLs, SDK keys, and feature flags.
 
+> **Flutter projects:** For additional protection, enable Flutter's built-in obfuscation when building for release:
+>
+> ```sh
+> flutter build apk --obfuscate --split-debug-info=debug-info/
+> ```
+
 ### AES-256 encryption
 
 Uses AES-256-GCM encryption via the [fortis](https://pub.dev/packages/fortis) package. The generated file requires `fortis` as a dependency and a runtime key to decrypt.
@@ -110,14 +116,16 @@ void main() {
 
 ## Setup
 
-Organize your project with a folder named `environment` and a file named `environment.yaml`:
+Organize your project with a folder named `environment` and a config file (`.yaml`, `.yml`, or `.json`):
 
 ```text
 your_project/
 ├── environment/
-│   └── environment.yaml
+│   └── environment.yaml   # or .yml or .json
 ```
 
+> The CLI auto-detects the file format. Priority order: `.yaml` > `.yml` > `.json`.
+>
 > You can change the folder and file name using `--folder` and `--config` flags.
 
 ### Basic example
@@ -258,24 +266,24 @@ encrypt_env gen --no-test
 
 ### Available flags
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--folder` | `environment` | Folder containing your configuration files |
-| `--config` | `environment` | Base config file name (without `.yaml`) |
-| `-e`, `--env` | _none_ | Environment name to merge (e.g., `dev`, `prod`) |
-| `--out-dir` | `lib` | Output directory for the generated Dart file |
-| `--out-file` | `environment` | Output Dart file name (without `.dart`) |
-| `-s`, `--style` | `cc` | Getter naming style: `cc` (camelCase), `sc` (snake_case), `ssc` (SCREAMING_SNAKE_CASE) |
-| `--encrypt` | `false` | Use AES-256-GCM encryption instead of XOR obfuscation |
-| `-k`, `--key` | _none_ | Base64 AES-256 key (used with `--encrypt`) |
-| `--[no-]test` | `true` | Generate a test file alongside the Dart file |
+| Flag            | Default       | Description                                                                            |
+| --------------- | ------------- | -------------------------------------------------------------------------------------- |
+| `--folder`      | `environment` | Folder containing your configuration files                                             |
+| `--config`      | `environment` | Base config file name (without extension)                                              |
+| `-e`, `--env`   | _none_        | Environment name to merge (e.g., `dev`, `prod`)                                        |
+| `--out-dir`     | `lib`         | Output directory for the generated Dart file                                           |
+| `--out-file`    | `environment` | Output Dart file name (without `.dart`)                                                |
+| `-s`, `--style` | `cc`          | Getter naming style: `cc` (camelCase), `sc` (snake_case), `ssc` (SCREAMING_SNAKE_CASE) |
+| `--encrypt`     | `false`       | Use AES-256-GCM encryption instead of XOR obfuscation                                  |
+| `-k`, `--key`   | _none_        | Base64 AES-256 key (used with `--encrypt`)                                             |
+| `--[no-]test`   | `true`        | Generate a test file alongside the Dart file                                           |
 
 ## Documentation
 
 Detailed documentation about how each mode works:
 
-- [XOR obfuscation](doc/xor-obfuscation/) — [English](doc/xor-obfuscation/en.md) | [Portugues](doc/xor-obfuscation/pt-br.md) | [Espanol](doc/xor-obfuscation/es.md)
-- [AES-256 encryption](doc/aes-encryption/) — [English](doc/aes-encryption/en.md) | [Portugues](doc/aes-encryption/pt-br.md) | [Espanol](doc/aes-encryption/es.md)
+- [XOR obfuscation](doc/xor-obfuscation/) — [English](doc/xor-obfuscation/en.md) | [Português](doc/xor-obfuscation/pt-br.md) | [Español](doc/xor-obfuscation/es.md)
+- [AES-256 encryption](doc/aes-encryption/) — [English](doc/aes-encryption/en.md) | [Português](doc/aes-encryption/pt-br.md) | [Español](doc/aes-encryption/es.md)
 
 ## Help
 
