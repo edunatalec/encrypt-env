@@ -95,6 +95,9 @@ List<int> _perm(int length, int seed) {
   @override
   String get imports => '';
 
+  @override
+  String get testSetup => '';
+
   List<int> _xor(List<int> data, List<int> key) {
     return List<int>.generate(
       data.length,

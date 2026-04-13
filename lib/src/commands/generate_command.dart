@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:args/command_runner.dart';
 import 'package:fortis/fortis.dart';
 import 'package:mason_logger/mason_logger.dart';
+import 'package:yaml/yaml.dart';
 
 import '../config/config_reader.dart';
 import '../generator/case_style.dart';
 import '../generator/code_builder.dart';
 import '../generator/generator.dart';
+import '../generator/test_builder.dart';
 import '../strategy/aes_strategy.dart';
 import '../strategy/obfuscation_strategy.dart';
 import '../strategy/xor_strategy.dart';
@@ -74,6 +78,11 @@ class GenerateCommand extends Command<int> {
         'key',
         abbr: 'k',
         help: 'Base64 AES-256 key (required with --encrypt)',
+      )
+      ..addFlag(
+        'test',
+        defaultsTo: true,
+        help: 'Generate a test file alongside the Dart file',
       );
   }
 
@@ -91,30 +100,71 @@ class GenerateCommand extends Command<int> {
       final useEncrypt = _resolveEncrypt();
       final strategy = await _buildStrategy(useEncrypt);
       final style = _resolveStyle();
+      final outFile = _resolveOption('out-file', 'Output file name:');
+      final generateTest = argResults?['test'] == true;
+
+      final caseStyle = CaseStyle.values.firstWhere(
+        (format) => format.code == style,
+      );
 
       final configReader = ConfigReader(
         folderName: _resolveOption('folder', 'Config folder:'),
         configName: _resolveOption('config', 'Config file name:'),
-        env: _resolveOptional('env', 'Environment name (leave empty to skip):'),
+        env: _resolveOptional(
+          'env',
+          'Environment name (leave empty to skip):',
+        ),
       );
 
       final codeBuilder = CodeBuilder(
-        caseStyle: CaseStyle.values.firstWhere(
-          (format) => format.code == style,
-        ),
+        caseStyle: caseStyle,
         strategy: strategy,
       );
+
+      final outDir = _resolveOption('out-dir', 'Output directory:');
+
+      TestBuilder? testBuilder;
+
+      if (generateTest) {
+        final pubspec = _readPubspec();
+
+        String importPath;
+
+        if (pubspec.packageName != null) {
+          final subPath = outDir.startsWith('lib/')
+              ? outDir.substring(4)
+              : outDir.startsWith('lib')
+                  ? outDir.substring(3)
+                  : outDir;
+          final prefix = subPath.isEmpty ? '' : '$subPath/';
+          importPath = 'package:${pubspec.packageName}/$prefix$outFile.dart';
+        } else {
+          importPath = '../$outDir/$outFile.dart';
+        }
+
+        testBuilder = TestBuilder(
+          caseStyle: caseStyle,
+          strategy: strategy,
+          importPath: importPath,
+          flutter: pubspec.isFlutter,
+        );
+      }
 
       final response = await Generator(
         configReader: configReader,
         codeBuilder: codeBuilder,
-        outDir: _resolveOption('out-dir', 'Output directory:'),
-        outFile: _resolveOption('out-file', 'Output file name:'),
+        testBuilder: testBuilder,
+        outDir: outDir,
+        outFile: outFile,
       ).run();
 
       _logger.success('Encrypted\n');
       _logger.info(response.environment);
       _logger.success('\n\u2713 Path ${response.path}');
+
+      if (response.testPath != null) {
+        _logger.success('\u2713 Test ${response.testPath}');
+      }
 
       return ExitCode.success.code;
     } catch (error) {
@@ -163,6 +213,23 @@ class GenerateCommand extends Command<int> {
     final value = _logger.prompt(prompt);
 
     return value.isEmpty ? null : value;
+  }
+
+  ({String? packageName, bool isFlutter}) _readPubspec() {
+    final file = File('pubspec.yaml');
+
+    if (!file.existsSync()) return (packageName: null, isFlutter: false);
+
+    try {
+      final yaml = loadYaml(file.readAsStringSync()) as YamlMap;
+      final name = yaml['name'] as String?;
+      final deps = yaml['dependencies'];
+      final isFlutter = deps is YamlMap && deps.containsKey('flutter');
+
+      return (packageName: name, isFlutter: isFlutter);
+    } catch (_) {
+      return (packageName: null, isFlutter: false);
+    }
   }
 
   Future<ObfuscationStrategy> _buildStrategy(bool useEncrypt) async {

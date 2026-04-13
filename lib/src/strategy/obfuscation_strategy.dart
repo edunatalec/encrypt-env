@@ -24,4 +24,9 @@ abstract class ObfuscationStrategy {
 
   /// Returns the import statements required by the generated file.
   String get imports;
+
+  /// Returns the test setup code (e.g., `setUpAll`) for the generated test file.
+  ///
+  /// Return an empty string if no setup is needed.
+  String get testSetup;
 }

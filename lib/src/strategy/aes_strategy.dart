@@ -8,12 +8,15 @@ import 'obfuscation_strategy.dart';
 /// The generated file requires `init(key)` to be called at runtime
 /// before accessing any values.
 class AesStrategy implements ObfuscationStrategy {
+  final String _key;
+
   /// The AES cipher used for encryption.
   final AesCipher _cipher;
 
   /// Creates an [AesStrategy] with the given base64-encoded [key].
   AesStrategy({required String key})
-      : _cipher =
+      : _key = key,
+        _cipher =
             Fortis.aes().mode(AesMode.gcm).cipher(FortisAesKey.fromBase64(key));
 
   @override
@@ -46,4 +49,8 @@ sealed class EncryptEnv {
 
   @override
   String get imports => "import 'package:fortis/fortis.dart';\n";
+
+  @override
+  String get testSetup =>
+      "  setUpAll(() {\n    EncryptEnv.init('$_key');\n  });\n";
 }

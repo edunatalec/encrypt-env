@@ -4,6 +4,7 @@ import '../config/config_reader.dart';
 import '../utils/map_utils.dart';
 import 'code_builder.dart';
 import 'generator_response.dart';
+import 'test_builder.dart';
 
 /// Orchestrates the generation of an obfuscated Dart file
 /// from YAML configuration.
@@ -13,6 +14,9 @@ class Generator {
 
   /// The code builder that generates the Dart source.
   final CodeBuilder codeBuilder;
+
+  /// The test builder that generates the test file.
+  final TestBuilder? testBuilder;
 
   /// The output directory for the generated file.
   final String outDir;
@@ -24,6 +28,7 @@ class Generator {
   const Generator({
     required this.configReader,
     required this.codeBuilder,
+    this.testBuilder,
     required this.outDir,
     required this.outFile,
   });
@@ -33,19 +38,35 @@ class Generator {
     final data = await configReader.read();
     final source = codeBuilder.build(data);
 
-    await _writeFile(source);
+    await _writeFile('$outDir/$outFile.dart', source);
+
+    String? testPath;
+
+    if (testBuilder != null) {
+      final testSource = testBuilder!.build(data);
+
+      testPath = 'test/${outFile}_test.dart';
+
+      await _writeFile(testPath, testSource);
+      await _formatFile(testPath);
+    }
 
     return GeneratorResponse(
       environment: data.prettify(),
       path: '$outDir/$outFile.dart',
+      testPath: testPath,
     );
   }
 
-  Future<void> _writeFile(String content) async {
-    await Directory(outDir).create(recursive: true);
+  Future<void> _writeFile(String path, String content) async {
+    final file = File(path);
 
-    final file = File('$outDir/$outFile.dart');
+    await file.parent.create(recursive: true);
     await file.create();
     await file.writeAsString(content);
+  }
+
+  Future<void> _formatFile(String path) async {
+    await Process.run('dart', ['format', path]);
   }
 }
