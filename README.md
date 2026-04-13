@@ -1,17 +1,22 @@
 [![pub package](https://img.shields.io/pub/v/encrypt_env.svg)](https://pub.dev/packages/encrypt_env)
 [![package publisher](https://img.shields.io/pub/publisher/encrypt_env.svg)](https://pub.dev/packages/encrypt_env/publisher)
 
-**encrypt_env** is a Dart CLI tool designed to encrypt sensitive environment variables for Flutter and Dart applications. It helps you secure API keys, secrets, tokens, and other private configuration details by generating encrypted files from YAML definitions.
+**encrypt_env** is a Dart CLI tool that generates obfuscated or encrypted Dart files from YAML configuration. It helps you protect API keys, secrets, tokens, and other sensitive data in Flutter and Dart applications.
 
 ## Summary
 
 - [Installation](#installation)
-- [How it works](#how-it-works)
+- [Quick start](#quick-start)
+- [Modes](#modes)
+  - [XOR obfuscation](#xor-obfuscation)
+  - [AES-256 encryption](#aes-256-encryption)
 - [Setup](#setup)
   - [Basic example](#basic-example)
-- [Merging Environments](#merging-environments)
+- [Merging environments](#merging-environments)
+- [Key generation](#key-generation)
 - [Customization](#customization)
-  - [Available Flags](#available-flags)
+  - [Available flags](#available-flags)
+- [Documentation](#documentation)
 - [Help](#help)
 
 ## Installation
@@ -22,17 +27,89 @@ Activate globally via Dart:
 dart pub global activate encrypt_env
 ```
 
-## How it works
+## Quick start
 
-The `encrypt_env` CLI reads your `environment.yaml` and generates a Dart class with **static, strongly-typed getters** where **all values are encrypted** at compile time and only decrypted at runtime.
+Run without arguments for an interactive experience:
+
+```sh
+encrypt_env gen
+```
+
+The CLI will guide you through each option:
+
+```
+? Choose a mode:
+❯ XOR obfuscation (no dependencies)
+  AES-256 encryption (requires fortis)
+
+? Choose a case style:
+❯ camelCase
+  snake_case
+  SCREAMING_SNAKE_CASE
+
+? Config folder: (environment)
+? Config file name: (environment)
+? Environment name (leave empty to skip):
+? Output directory: (lib)
+? Output file name: (environment)
+```
+
+Or pass flags directly for automation:
+
+```sh
+encrypt_env gen --style cc --env prod
+```
+
+> When any flag is passed, the CLI uses default values for the remaining options without prompting.
+
+## Modes
+
+### XOR obfuscation
+
+The default mode. Uses multi-layer XOR obfuscation with per-value salt, byte shuffling, and derived key passes. The generated file has **zero external dependencies**.
+
+```sh
+encrypt_env gen
+```
+
+Values are obfuscated — not visible as plain text in the source code or binary, but not cryptographically secure. Ideal for base URLs, SDK keys, and feature flags.
+
+### AES-256 encryption
+
+Uses AES-256-GCM encryption via the [fortis](https://pub.dev/packages/fortis) package. The generated file requires `fortis` as a dependency and a runtime key to decrypt.
+
+```sh
+# With your own key
+encrypt_env gen --encrypt --key <base64_key>
+
+# Auto-generate a key
+encrypt_env gen --encrypt
+```
+
+When no key is provided, the CLI generates one and displays it in the console:
+
+```
+Generated a new AES-256 key:
+
+hEvB+s5mpCLmmioI6Ji53JwIzx7ZQ5HUih/7CTv5S2I=
+
+⚠ Save this key securely. You will need it at runtime.
+```
+
+The generated file includes an `EncryptEnv` class with an `init()` method that must be called before accessing any value:
+
+```dart
+import 'environment.dart';
+
+void main() {
+  EncryptEnv.init('your-base64-key-here');
+  print(Environment.baseUrl);
+}
+```
 
 ## Setup
 
-You need to organize your project with a folder named `environment` and a file named `environment.yaml`, as shown in the image below:
-
-<img src="./assets/folder-example.png">
-
-This file will contain your sensitive environment variables, such as API keys, secrets, tokens, etc.
+Organize your project with a folder named `environment` and a file named `environment.yaml`:
 
 ```text
 your_project/
@@ -40,7 +117,7 @@ your_project/
 │   └── environment.yaml
 ```
 
-> Note: You can change the folder and file name by using the --folder and --yaml options when running the CLI. For more details go to the section [Customization](#customization).
+> You can change the folder and file name using `--folder` and `--config` flags.
 
 ### Basic example
 
@@ -58,154 +135,117 @@ endpoint:
   endpoint_b: 'endpoint-b'
 ```
 
-Then, in the root folder, run the following command:
+Run:
 
 ```sh
 encrypt_env gen
 ```
 
-You should see the following log in the console:
-
-```json
-Encrypted
-
-{
-  "environment": {
-    "base_url": "http://localhost:3000",
-    "version": "1.0.0",
-    "production": false,
-    "headers": {
-      "api-key": "value"
-    }
-  },
-  "endpoint": {
-    "endpoint_a": "endpoint-a",
-    "endpoint_b": "endpoint-b"
-  }
-}
-
-✓ Path lib/environment.dart
-```
-
-As indicated in the log, the file `lib/environment.dart` has been generated:
+The file `lib/environment.dart` will be generated with sealed classes and strongly-typed getters:
 
 ```dart
 sealed class Environment {
-	/// baseUrl: http://localhost:3000
-	static String get baseUrl {
-		final List<int> encoded = [0xd5, 0x98, 0x52, 0x52, 0xe6, 0x31, 0x9a, 0x43, 0x4, 0x9b, 0xc0, 0x80, 0x11, 0xf9, 0x2c, 0xeb, 0xd2, 0xa3, 0x2c, 0x1e, 0x38];
+  static String get baseUrl {
+    final List<int> encoded = [0xd5, 0x98, ...];
+    final List<int> salt = [...[0xaa, 0xbb, ...], ...[0xcc, 0xdd, ...]];
 
-		return _decode(encoded);
-	}
+    return _decode(encoded, salt);
+  }
 
-	/// version: 1.0.0
-	static String get version {
-		final List<int> encoded = [0x8c, 0xc2, 0x16, 0xc, 0xec];
+  static bool get production {
+    final List<int> encoded = [0xdb, 0x8d, ...];
+    final List<int> salt = [...[0x94, 0xb5, ...], ...[0xe3, 0xa0, ...]];
 
-		return _decode(encoded);
-	}
+    return bool.parse(_decode(encoded, salt));
+  }
 
-	/// production: false
-	static bool get production {
-		final List<int> encoded = [0xdb, 0x8d, 0x4a, 0x51, 0xb9];
-
-		return bool.parse(_decode(encoded));
-	}
-
-	static Map<String, dynamic> get headers {
-		return {
-			// api-key: value
-			_decode([0xdc, 0x9c, 0x4f, 0xf, 0xb7, 0x7b, 0xcc]): _apiKey,
-		};
-	}
-
-	/// _apiKey: value
-	static String get _apiKey {
-		final List<int> encoded = [0xcb, 0x8d, 0x4a, 0x57, 0xb9];
-
-		return _decode(encoded);
-	}
+  static Map<String, dynamic> get headers {
+    return {
+      _decode([0xdc, ...], [...[...], ...[...]]): _apiKey,
+    };
+  }
 }
 
 sealed class Endpoint {
-	/// endpointA: endpoint-a
-	static String get endpointA {
-		final List<int> encoded = [0xd8, 0x82, 0x42, 0x52, 0xb3, 0x77, 0xdb, 0x5b, 0x46, 0x99];
-
-		return _decode(encoded);
-	}
-
-	/// endpointB: endpoint-b
-	static String get endpointB {
-		final List<int> encoded = [0xd8, 0x82, 0x42, 0x52, 0xb3, 0x77, 0xdb, 0x5b, 0x46, 0x9a];
-
-		return _decode(encoded);
-	}
+  static String get endpointA { ... }
+  static String get endpointB { ... }
 }
 ```
 
-## Merging Environments
+Each value has its own unique salt, split into two fragments for additional obscurity.
 
-You can dynamically merge environment files using the `--environment` flag.
+## Merging environments
 
-By default, the CLI looks for a base file:
+You can merge environment-specific overrides on top of a base config:
 
 ```yaml
-# environment/environment.yaml
-
+# environment/environment.yaml (base)
 environment:
   production: false
   base_url: 'http://localhost:3000'
-  api_key: 'your_dev_api_key_here'
-  database_url: 'your_dev_database_url_here'
-endpoint:
-  endpoint_a: 'endpoint-a'
-  endpoint_b: 'endpoint-b'
+  api_key: 'dev_key'
 ```
 
 ```yaml
-# environment/prod_environment.yaml
-
+# environment/prod_environment.yaml (overrides)
 environment:
   production: true
   base_url: 'https://api.example.com'
-  api_key: 'your_production_api_key_here'
-  database_url: 'your_production_database_url_here'
-```
-
-```text
-environment/
-├── environment.yaml # Base config
-└── prod_environment.yaml # Overrides
+  api_key: 'prod_key'
 ```
 
 ```sh
-encrypt_env gen --environment prod
+encrypt_env gen -e prod
 ```
 
-This will merge both YAMLs, applying all values from `prod_environment.yaml` on top of the base config.
+Values from `prod_environment.yaml` override the base config. Unspecified values are preserved from the base.
 
-> You can use any prefix (e.g. `staging`, `dev`, `uat`). Just keep the format `prefix_environment.yaml` and match it in `--environment`.
+> Use any prefix: `staging`, `dev`, `uat`, etc. Format: `{prefix}_environment.yaml`.
+
+## Key generation
+
+Generate a random AES-256 key:
+
+```sh
+encrypt_env keygen
+```
+
+```
+AES-256 key generated:
+
+y67ImXMjCr1Uuo6jvF0pXBuomlshiwCgbwYQFRiUHbk=
+```
 
 ## Customization
 
-You can customize how the CLI reads and writes files using optional flags.
+### Available flags
 
-### Available Flags
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--folder` | `environment` | Folder containing your configuration files |
+| `--config` | `environment` | Base config file name (without `.yaml`) |
+| `-e`, `--env` | _none_ | Environment name to merge (e.g., `dev`, `prod`) |
+| `--out-dir` | `lib` | Output directory for the generated Dart file |
+| `--out-file` | `environment` | Output Dart file name (without `.dart`) |
+| `-s`, `--style` | `cc` | Getter naming style: `cc` (camelCase), `sc` (snake_case), `ssc` (SCREAMING_SNAKE_CASE) |
+| `--encrypt` | `false` | Use AES-256-GCM encryption instead of XOR obfuscation |
+| `-k`, `--key` | _none_ | Base64 AES-256 key (used with `--encrypt`) |
 
-| Flag                  | Default       | Description                                                                            |
-| --------------------- | ------------- | -------------------------------------------------------------------------------------- |
-| `--folder`            | `environment` | Folder containing your configuration files                                             |
-| `--config`            | `environment` | Base config file name (without `.yaml` extension)                                      |
-| `-e`, `--environment` | _none_        | Optional environment name to merge (e.g., `dev`, `prod`)                               |
-| `--out-dir`           | `lib`         | Output directory for the generated Dart file                                           |
-| `--out-file`          | `environment` | Output Dart file name (without `.dart` extension)                                      |
-| `-s`, `--style`       | `cc`          | Getter naming style: `ssc` (SCREAMING_SNAKE_CASE), `cc` (camelCase), `sc` (snake_case) |
+## Documentation
+
+Detailed documentation about how each mode works:
+
+- [XOR obfuscation](doc/xor-obfuscation/) — [English](doc/xor-obfuscation/en.md) | [Portugues](doc/xor-obfuscation/pt-br.md) | [Espanol](doc/xor-obfuscation/es.md)
+- [AES-256 encryption](doc/aes-encryption/) — [English](doc/aes-encryption/en.md) | [Portugues](doc/aes-encryption/pt-br.md) | [Espanol](doc/aes-encryption/es.md)
 
 ## Help
 
-To view all available commands and options, run:
+To view all available commands and options:
 
 ```bash
 encrypt_env -h
 ```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.

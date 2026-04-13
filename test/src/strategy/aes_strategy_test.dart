@@ -94,17 +94,25 @@ void main() {
     test('returns decryptToString expression', () {
       final encoded = strategy.encode('key');
       final expr = strategy.buildMapKeyDecode(encoded);
-      expect(expr, startsWith("_cipher.decryptToString('"));
+      expect(expr, startsWith("EncryptEnv._cipher.decryptToString('"));
     });
   });
 
   group('decodeFunctionSource', () {
-    test('contains init function', () {
-      expect(strategy.decodeFunctionSource, contains('void init('));
+    test('contains EncryptEnv class', () {
+      expect(
+          strategy.decodeFunctionSource, contains('sealed class EncryptEnv'));
     });
 
-    test('contains _cipher declaration', () {
-      expect(strategy.decodeFunctionSource, contains('late AesCipher _cipher'));
+    test('contains static init function', () {
+      expect(strategy.decodeFunctionSource, contains('static void init('));
+    });
+
+    test('contains static _cipher declaration', () {
+      expect(
+        strategy.decodeFunctionSource,
+        contains('static late AesCipher _cipher'),
+      );
     });
 
     test('contains FortisAesKey.fromBase64', () {

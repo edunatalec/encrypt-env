@@ -23,23 +23,25 @@ class AesStrategy implements ObfuscationStrategy {
 
   @override
   String buildGetterBody(String encoded) {
-    return "\t\treturn _cipher.decryptToString('$encoded')";
+    return "\t\treturn EncryptEnv._cipher.decryptToString('$encoded')";
   }
 
   @override
   String buildMapKeyDecode(String encoded) {
-    return "_cipher.decryptToString('$encoded')";
+    return "EncryptEnv._cipher.decryptToString('$encoded')";
   }
 
   @override
   String get decodeFunctionSource => '''
-late AesCipher _cipher;
+sealed class EncryptEnv {
+  static late AesCipher _cipher;
 
-/// Initializes the decryption cipher with the provided base64-encoded [key].
-///
-/// Must be called before accessing any environment values.
-void init(String key) {
-  _cipher = Fortis.aes().mode(AesMode.gcm).cipher(FortisAesKey.fromBase64(key));
+  /// Initializes the decryption cipher with the provided base64-encoded [key].
+  ///
+  /// Must be called before accessing any environment values.
+  static void init(String key) {
+    _cipher = Fortis.aes().mode(AesMode.gcm).cipher(FortisAesKey.fromBase64(key));
+  }
 }''';
 
   @override

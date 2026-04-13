@@ -148,25 +148,26 @@ void main() {
       expect(result, contains("import 'package:fortis/fortis.dart'"));
     });
 
-    test('contains init function', () {
+    test('contains EncryptEnv class with init', () {
       final result = aesBuilder.build({
         'environment': {'key': 'value'},
       });
-      expect(result, contains('void init('));
+      expect(result, contains('sealed class EncryptEnv'));
+      expect(result, contains('static void init('));
     });
 
-    test('contains _cipher declaration', () {
+    test('contains static _cipher declaration', () {
       final result = aesBuilder.build({
         'environment': {'key': 'value'},
       });
-      expect(result, contains('late AesCipher _cipher'));
+      expect(result, contains('static late AesCipher _cipher'));
     });
 
-    test('getters use decryptToString', () {
+    test('getters use EncryptEnv._cipher.decryptToString', () {
       final result = aesBuilder.build({
         'environment': {'base_url': 'http://localhost'},
       });
-      expect(result, contains('_cipher.decryptToString'));
+      expect(result, contains('EncryptEnv._cipher.decryptToString'));
     });
 
     test('generates typed getters with parse', () {
