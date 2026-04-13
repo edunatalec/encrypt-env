@@ -39,10 +39,6 @@ encrypt_env gen
 The CLI will guide you through each option:
 
 ```
-? Folder containing your config files: (environment)
-? Config file name (without extension): (environment)
-? Environment to merge (e.g. dev, prod — leave empty to skip):
-
 ? Choose a mode:
 ❯ XOR obfuscation (no dependencies)
   AES-256 encryption (requires fortis)
@@ -52,8 +48,12 @@ The CLI will guide you through each option:
   snake_case
   SCREAMING_SNAKE_CASE
 
+? Folder containing your config files: (environment)
+? Config file name (without extension): (environment)
+? Environment to merge (e.g. dev, prod — leave empty to skip):
 ? Output directory for generated Dart file: (lib)
 ? Output file name (without .dart): (environment)
+? Generate test file? (Y/n)
 ```
 
 Or pass flags directly for automation:
