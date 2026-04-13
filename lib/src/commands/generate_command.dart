@@ -1,4 +1,5 @@
 import 'package:args/command_runner.dart';
+import 'package:fortis/fortis.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 import '../config/config_reader.dart';
@@ -76,7 +77,7 @@ class GenerateCommand extends Command<int> {
   @override
   Future<int> run() async {
     try {
-      final strategy = _buildStrategy();
+      final strategy = await _buildStrategy();
 
       final configReader = ConfigReader(
         folderName: argResults?['folder'],
@@ -110,15 +111,21 @@ class GenerateCommand extends Command<int> {
     }
   }
 
-  ObfuscationStrategy _buildStrategy() {
+  Future<ObfuscationStrategy> _buildStrategy() async {
     final useEncrypt = argResults?['encrypt'] == true;
 
     if (!useEncrypt) return XorStrategy();
 
-    final key = argResults?['key'] as String?;
+    var key = argResults?['key'] as String?;
 
     if (key == null || key.isEmpty) {
-      throw 'The --key option is required when using --encrypt.';
+      final generated = await Fortis.aes().keySize(256).generateKey();
+      key = generated.toBase64();
+
+      _logger.info('No --key provided. Generated a new AES-256 key:\n');
+      _logger.success(key);
+      _logger.info('');
+      _logger.warn('Save this key securely. You will need it at runtime.\n');
     }
 
     return AesStrategy(key: key);
