@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.1.0 - 2026-04-13
+
+### Added
+
+- Support for `.yml` and `.json` config file formats in addition to `.yaml`
+- Auto-detection of config file format with priority order: `.yaml` > `.yml` > `.json`
+- Base and environment-specific files can use different formats (e.g., base in `.yaml`, env override in `.json`)
+
+### Changed
+
+- `ConfigReader` now probes for supported extensions instead of hardcoding `.yaml`
+- Error messages list all tried file paths when no config file is found
+- Updated CLI description and README to reflect multi-format support
+
 ## 3.0.0 - 2026-04-12
 
 ### Added
