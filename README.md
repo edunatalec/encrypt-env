@@ -1,7 +1,9 @@
+# Encrypt Env
+
 [![pub package](https://img.shields.io/pub/v/encrypt_env.svg)](https://pub.dev/packages/encrypt_env)
 [![package publisher](https://img.shields.io/pub/publisher/encrypt_env.svg)](https://pub.dev/packages/encrypt_env/publisher)
 
-**encrypt_env** is a Dart CLI tool that generates obfuscated or encrypted Dart files from YAML or JSON configuration. It helps you protect API keys, secrets, tokens, and other sensitive data in Flutter and Dart applications.
+A Dart CLI tool that generates obfuscated or encrypted Dart files from YAML or JSON configuration. It helps you protect API keys, secrets, tokens, and other sensitive data in Flutter and Dart applications.
 
 ## Summary
 
