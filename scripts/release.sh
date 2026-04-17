@@ -3,6 +3,7 @@ set -e
 
 echo "=== Validating package ==="
 dart pub get
+dart test
 dart pub publish --dry-run
 
 echo ""
