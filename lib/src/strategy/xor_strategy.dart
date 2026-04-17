@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import '../utils/bytes_utils.dart';
@@ -19,7 +18,7 @@ class XorStrategy implements ObfuscationStrategy {
   String encode(String value) {
     final plainBytes = Uint8List.fromList(value.codeUnits);
     final saltSize =
-        _minSaltSize + Random.secure().nextInt(_maxSaltSize - _minSaltSize + 1);
+        _minSaltSize + secureRandom.nextInt(_maxSaltSize - _minSaltSize + 1);
     final salt = randomBytes(saltSize);
 
     // Pass 1: XOR with salt
@@ -35,7 +34,7 @@ class XorStrategy implements ObfuscationStrategy {
     final xored2 = _xor(shuffled, derivedKey);
 
     // Fragment salt into 2 parts
-    final splitPoint = 1 + Random.secure().nextInt(salt.length - 1);
+    final splitPoint = 1 + secureRandom.nextInt(salt.length - 1);
     final f1 = salt.sublist(0, splitPoint);
     final f2 = salt.sublist(splitPoint);
 

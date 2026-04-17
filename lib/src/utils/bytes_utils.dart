@@ -1,12 +1,16 @@
 import 'dart:math';
 import 'dart:typed_data';
 
+/// Shared cryptographically-secure PRNG. Instantiating `Random.secure()` is
+/// expensive (each call reads from the OS entropy pool), so we reuse one
+/// instance across all encoding operations.
+final Random secureRandom = Random.secure();
+
 /// Generates a secure random byte array of the given [length].
 Uint8List randomBytes(int length) {
-  final random = Random.secure();
   final bytes = Uint8List(length);
   for (var i = 0; i < length; i++) {
-    bytes[i] = random.nextInt(256);
+    bytes[i] = secureRandom.nextInt(256);
   }
   return bytes;
 }

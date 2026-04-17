@@ -191,12 +191,16 @@ class GenerateCommand extends Command<int> {
       }
 
       return ExitCode.success.code;
-    } on FortisConfigException catch (error) {
-      _logger.err('Invalid AES-256 key: ${error.message}');
+    } on FortisConfigException catch (error, stackTrace) {
+      _logger
+        ..err('Invalid AES-256 key: ${error.message}')
+        ..detail('$stackTrace');
 
       return ExitCode.usage.code;
-    } catch (error) {
-      _logger.err(error.toString());
+    } catch (error, stackTrace) {
+      _logger
+        ..err(error.toString())
+        ..detail('$stackTrace');
 
       return ExitCode.ioError.code;
     }
@@ -261,7 +265,10 @@ class GenerateCommand extends Command<int> {
       final isFlutter = deps is YamlMap && deps.containsKey('flutter');
 
       return (packageName: name, isFlutter: isFlutter);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _logger
+        ..detail('Failed to read pubspec.yaml: $error')
+        ..detail('$stackTrace');
       return (packageName: null, isFlutter: false);
     }
   }

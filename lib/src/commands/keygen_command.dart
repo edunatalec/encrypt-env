@@ -26,8 +26,10 @@ class KeygenCommand extends Command<int> {
       _logger.info(key.toBase64());
 
       return ExitCode.success.code;
-    } catch (error) {
-      _logger.err(error.toString());
+    } catch (error, stackTrace) {
+      _logger
+        ..err(error.toString())
+        ..detail('$stackTrace');
 
       return ExitCode.ioError.code;
     }

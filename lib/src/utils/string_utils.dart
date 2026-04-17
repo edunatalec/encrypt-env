@@ -1,6 +1,4 @@
-/// Regular expression to match underscores (_) and hyphens (-),
-/// used for splitting strings into words.
-final RegExp regex = RegExp(r'[_-]');
+final RegExp _separatorRegex = RegExp(r'[_-]');
 
 /// Extension providing utilities for converting strings into different case styles.
 extension StringExtension on String {
@@ -16,7 +14,7 @@ extension StringExtension on String {
   /// ```
   String toPascalCase() {
     final List<String> words =
-        trim().toLowerCase().split(regex).where((element) {
+        trim().toLowerCase().split(_separatorRegex).where((element) {
       return element.isNotEmpty;
     }).toList();
 
@@ -56,7 +54,7 @@ extension StringExtension on String {
   /// ```
   String toSnakeCase() {
     String text = trim()
-        .split(regex)
+        .split(_separatorRegex)
         .where((element) => element.isNotEmpty)
         .toList()
         .join('_');
