@@ -180,6 +180,14 @@ class GenerateCommand extends Command<int> {
 
       if (response.testPath != null) {
         _logger.success('\u2713 Test ${response.testPath}');
+
+        if (useEncrypt) {
+          _logger.warn(
+            '\nThe generated test file embeds the AES-256 key in plaintext. '
+            'Do NOT commit ${response.testPath} to a public repository — '
+            'add it to .gitignore or rotate the key before publishing.',
+          );
+        }
       }
 
       return ExitCode.success.code;

@@ -113,6 +113,13 @@ class CodeBuilder {
     MapEntry<String, dynamic> entry, {
     bool isLast = false,
   }) {
+    if (entry.value == null) {
+      throw FormatException(
+        'Config key "${entry.key}" has a null value. '
+        'Remove the key or provide a string/number/boolean value.',
+      );
+    }
+
     final encoded = strategy.encode(entry.value.toString());
     var body = strategy.buildGetterBody(encoded);
 

@@ -22,8 +22,20 @@ extension MapExtenstion on Map {
     final Map<String, dynamic> newMap = {...this, ...map};
 
     for (final key in keys) {
-      if (map.containsKey(key) && map[key] is Map<String, dynamic>) {
-        newMap[key] = (this[key] as Map<String, dynamic>).merge(map[key]);
+      if (!map.containsKey(key)) continue;
+
+      final base = this[key];
+      final override = map[key];
+      final baseIsMap = base is Map<String, dynamic>;
+      final overrideIsMap = override is Map<String, dynamic>;
+
+      if (baseIsMap && overrideIsMap) {
+        newMap[key] = base.merge(override);
+      } else if (baseIsMap != overrideIsMap) {
+        throw FormatException(
+          'Cannot merge key "$key": base is ${base.runtimeType} '
+          'but override is ${override.runtimeType}.',
+        );
       }
     }
 

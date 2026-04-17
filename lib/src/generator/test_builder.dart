@@ -87,7 +87,7 @@ class TestBuilder {
 
     String expected;
     if (value is String) {
-      expected = "'${value.replaceAll("'", "\\'")}'";
+      expected = "'${_escapeDartString(value)}'";
     } else {
       expected = '$value';
     }
@@ -115,6 +115,16 @@ class TestBuilder {
       '      expect($className.$getterName, isA<Map<String, dynamic>>());',
     );
     file.writeln('    });\n');
+  }
+
+  String _escapeDartString(String value) {
+    return value
+        .replaceAll(r'\', r'\\')
+        .replaceAll(r'$', r'\$')
+        .replaceAll("'", r"\'")
+        .replaceAll('\r', r'\r')
+        .replaceAll('\n', r'\n')
+        .replaceAll('\t', r'\t');
   }
 
   String _formatGetter(String text) {

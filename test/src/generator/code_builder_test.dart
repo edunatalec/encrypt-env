@@ -93,6 +93,40 @@ void main() {
       expect(result, contains('sealed class Environment'));
       expect(result, contains('sealed class Settings'));
     });
+
+    test('throws FormatException on null value', () {
+      expect(
+        () => builder.build({
+          'environment': {'api_key': null},
+        }),
+        throwsA(
+          isA<FormatException>()
+              .having((e) => e.message, 'message', contains('api_key')),
+        ),
+      );
+    });
+
+    test('generates snake_case getter from camelCase YAML key', () {
+      final b = CodeBuilder(
+        caseStyle: CaseStyle.snakeCase,
+        strategy: XorStrategy(),
+      );
+      final result = b.build({
+        'env': {'apiBaseUrl': 'x'},
+      });
+      expect(result, contains('get api_base_url'));
+    });
+
+    test('generates SCREAMING_SNAKE_CASE getter from camelCase YAML key', () {
+      final b = CodeBuilder(
+        caseStyle: CaseStyle.screamingSnakeCase,
+        strategy: XorStrategy(),
+      );
+      final result = b.build({
+        'env': {'apiBaseUrl': 'x'},
+      });
+      expect(result, contains('get API_BASE_URL'));
+    });
   });
 
   group('case styles', () {

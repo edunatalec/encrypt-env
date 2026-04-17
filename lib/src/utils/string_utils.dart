@@ -61,6 +61,16 @@ extension StringExtension on String {
         .toList()
         .join('_');
 
+    text = text
+        .replaceAllMapped(
+          RegExp(r'([a-z0-9])([A-Z])'),
+          (m) => '${m[1]}_${m[2]}',
+        )
+        .replaceAllMapped(
+          RegExp(r'([A-Z]+)([A-Z][a-z])'),
+          (m) => '${m[1]}_${m[2]}',
+        );
+
     return text.length < 2 ? text : text[0].toLowerCase() + text.substring(1);
   }
 }

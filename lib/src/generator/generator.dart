@@ -38,7 +38,10 @@ class Generator {
     final data = await configReader.read();
     final source = codeBuilder.build(data);
 
-    await _writeFile('$outDir/$outFile.dart', source);
+    final mainPath = '$outDir/$outFile.dart';
+
+    await _writeFile(mainPath, source);
+    await _formatFile(mainPath);
 
     String? testPath;
 

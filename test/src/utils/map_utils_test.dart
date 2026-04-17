@@ -46,6 +46,19 @@ void main() {
       expect(<String, dynamic>{}.merge({'a': 1}), {'a': 1});
       expect({'a': 1}.merge(<String, dynamic>{}), {'a': 1});
     });
+
+    test('throws FormatException when base is primitive and override is Map',
+        () {
+      expect(
+        () => <String, dynamic>{'port': 3000}.merge({
+          'port': <String, dynamic>{'host': 'localhost'},
+        }),
+        throwsA(
+          isA<FormatException>()
+              .having((e) => e.message, 'message', contains('port')),
+        ),
+      );
+    });
   });
 
   group('prettify', () {

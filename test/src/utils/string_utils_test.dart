@@ -78,5 +78,21 @@ void main() {
     test('handles whitespace', () {
       expect('  hello_world  '.toSnakeCase(), 'hello_world');
     });
+
+    test('separates camelCase boundaries', () {
+      expect('helloWorld'.toSnakeCase(), 'hello_World');
+    });
+
+    test('separates PascalCase boundaries', () {
+      expect('HelloWorld'.toSnakeCase(), 'hello_World');
+    });
+
+    test('separates consecutive uppercase runs before lowercase', () {
+      expect('HTTPServer'.toSnakeCase(), 'hTTP_Server');
+    });
+
+    test('separates camelCase with digits', () {
+      expect('user2Profile'.toSnakeCase(), 'user2_Profile');
+    });
   });
 }
