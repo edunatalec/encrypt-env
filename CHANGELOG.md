@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.2.0 - 2026-04-16
+
+### Added
+
+- Warning when generating AES test files alerting that the embedded key must not be committed to public repositories
+- Dartdoc on the library directive (resolves pub.dev `Documentation` scoring)
+
+### Changed
+
+- `AesStrategy` uses the typed `Fortis.aes().gcm().cipher(...)` shortcut; `_cipher` is now declared as `AesAuthCipher` (the statically-typed AEAD variant from fortis 0.2.0)
+- Generator runs `dart format` on the main output file too — previously only the test file was formatted
+- `Random.secure()` is reused across encoding operations instead of being re-instantiated per value
+- Command error handlers now log stack traces via `_logger.detail(...)` — visible under `--verbose`
+- `GenerateCommand` catches `FortisConfigException` separately, returning `ExitCode.usage` (64) with a clearer message for invalid AES keys
+
+### Fixed
+
+- `toSnakeCase()` now inserts `_` between camelCase/PascalCase boundaries. YAML keys like `helloWorld` produce `hello_world` (with `-s sc`) or `HELLO_WORLD` (with `-s ssc`), instead of the previous `helloworld`/`HELLOWORLD`
+- Test generator now escapes `$`, `\`, `'`, `\n`, `\r`, `\t` in string values — values like `password$123` no longer produce a test file that fails to compile
+- `CodeBuilder` rejects `null` config values with `FormatException` naming the offending key, instead of generating invalid Dart (`static Null get ...`)
+- `Map.merge` detects base/override type mismatches (e.g. primitive vs map) and raises `FormatException` with context, instead of an opaque `TypeError`
+
 ## 3.1.0 - 2026-04-13
 
 ### Added
