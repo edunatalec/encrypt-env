@@ -16,54 +16,48 @@ void main() {
     test('roundtrips ASCII string', () {
       const value = 'hello world';
       final encoded = strategy.encode(value);
-      final cipher = Fortis.aes()
-          .mode(AesMode.gcm)
-          .cipher(FortisAesKey.fromBase64(testKey));
+      final cipher =
+          Fortis.aes().gcm().cipher(FortisAesKey.fromBase64(testKey));
       expect(cipher.decryptToString(encoded), value);
     });
 
     test('roundtrips URL string', () {
       const value = 'https://api.example.com/v1/users?key=abc123';
       final encoded = strategy.encode(value);
-      final cipher = Fortis.aes()
-          .mode(AesMode.gcm)
-          .cipher(FortisAesKey.fromBase64(testKey));
+      final cipher =
+          Fortis.aes().gcm().cipher(FortisAesKey.fromBase64(testKey));
       expect(cipher.decryptToString(encoded), value);
     });
 
     test('roundtrips numeric string', () {
       const value = '12345';
       final encoded = strategy.encode(value);
-      final cipher = Fortis.aes()
-          .mode(AesMode.gcm)
-          .cipher(FortisAesKey.fromBase64(testKey));
+      final cipher =
+          Fortis.aes().gcm().cipher(FortisAesKey.fromBase64(testKey));
       expect(cipher.decryptToString(encoded), value);
     });
 
     test('roundtrips boolean string', () {
       const value = 'true';
       final encoded = strategy.encode(value);
-      final cipher = Fortis.aes()
-          .mode(AesMode.gcm)
-          .cipher(FortisAesKey.fromBase64(testKey));
+      final cipher =
+          Fortis.aes().gcm().cipher(FortisAesKey.fromBase64(testKey));
       expect(cipher.decryptToString(encoded), value);
     });
 
     test('roundtrips special characters', () {
       const value = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
       final encoded = strategy.encode(value);
-      final cipher = Fortis.aes()
-          .mode(AesMode.gcm)
-          .cipher(FortisAesKey.fromBase64(testKey));
+      final cipher =
+          Fortis.aes().gcm().cipher(FortisAesKey.fromBase64(testKey));
       expect(cipher.decryptToString(encoded), value);
     });
 
     test('roundtrips long string', () {
       final value = 'a' * 500;
       final encoded = strategy.encode(value);
-      final cipher = Fortis.aes()
-          .mode(AesMode.gcm)
-          .cipher(FortisAesKey.fromBase64(testKey));
+      final cipher =
+          Fortis.aes().gcm().cipher(FortisAesKey.fromBase64(testKey));
       expect(cipher.decryptToString(encoded), value);
     });
   });
@@ -111,7 +105,7 @@ void main() {
     test('contains static _cipher declaration', () {
       expect(
         strategy.decodeFunctionSource,
-        contains('static late AesCipher _cipher'),
+        contains('static late AesAuthCipher _cipher'),
       );
     });
 

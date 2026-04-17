@@ -183,6 +183,10 @@ class GenerateCommand extends Command<int> {
       }
 
       return ExitCode.success.code;
+    } on FortisConfigException catch (error) {
+      _logger.err('Invalid AES-256 key: ${error.message}');
+
+      return ExitCode.usage.code;
     } catch (error) {
       _logger.err(error.toString());
 
@@ -270,7 +274,7 @@ class GenerateCommand extends Command<int> {
     }
 
     if (key == null || key.isEmpty) {
-      final generated = await Fortis.aes().keySize(256).generateKey();
+      final generated = await Fortis.aes().generateKey();
       key = generated.toBase64();
 
       _logger.info('');

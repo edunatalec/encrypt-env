@@ -10,14 +10,13 @@ import 'obfuscation_strategy.dart';
 class AesStrategy implements ObfuscationStrategy {
   final String _key;
 
-  /// The AES cipher used for encryption.
-  final AesCipher _cipher;
+  /// The AES-GCM cipher used for encryption.
+  final AesAuthCipher _cipher;
 
   /// Creates an [AesStrategy] with the given base64-encoded [key].
   AesStrategy({required String key})
       : _key = key,
-        _cipher =
-            Fortis.aes().mode(AesMode.gcm).cipher(FortisAesKey.fromBase64(key));
+        _cipher = Fortis.aes().gcm().cipher(FortisAesKey.fromBase64(key));
 
   @override
   String encode(String value) {
@@ -37,13 +36,13 @@ class AesStrategy implements ObfuscationStrategy {
   @override
   String get decodeFunctionSource => '''
 sealed class EncryptEnv {
-  static late AesCipher _cipher;
+  static late AesAuthCipher _cipher;
 
   /// Initializes the decryption cipher with the provided base64-encoded [key].
   ///
   /// Must be called before accessing any environment values.
   static void init(String key) {
-    _cipher = Fortis.aes().mode(AesMode.gcm).cipher(FortisAesKey.fromBase64(key));
+    _cipher = Fortis.aes().gcm().cipher(FortisAesKey.fromBase64(key));
   }
 }''';
 

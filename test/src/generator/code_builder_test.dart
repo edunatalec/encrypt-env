@@ -160,7 +160,7 @@ void main() {
       final result = aesBuilder.build({
         'environment': {'key': 'value'},
       });
-      expect(result, contains('static late AesCipher _cipher'));
+      expect(result, contains('static late AesAuthCipher _cipher'));
     });
 
     test('getters use EncryptEnv._cipher.decryptToString', () {

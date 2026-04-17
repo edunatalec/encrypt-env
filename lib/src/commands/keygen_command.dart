@@ -20,7 +20,7 @@ class KeygenCommand extends Command<int> {
   @override
   Future<int> run() async {
     try {
-      final key = await Fortis.aes().keySize(256).generateKey();
+      final key = await Fortis.aes().generateKey();
 
       _logger.success('AES-256 key generated:\n');
       _logger.info(key.toBase64());
