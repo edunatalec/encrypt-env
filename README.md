@@ -265,6 +265,8 @@ To disable test generation:
 encrypt_env gen --no-test
 ```
 
+> ⚠ In `--encrypt` mode, the generated test embeds the AES-256 key in plaintext. Do **not** commit it to a public repository — add the test file to `.gitignore` or rotate the key before publishing.
+
 ## Customization
 
 ### Available flags
