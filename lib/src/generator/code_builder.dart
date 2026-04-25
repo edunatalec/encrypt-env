@@ -89,11 +89,11 @@ class CodeBuilder {
       final value = map[element];
       final encoded = strategy.encode(element);
       final decode = strategy.buildMapKeyDecode(encoded);
-      final getterName = _formatGetter(element, private: private);
+      final getterName = _formatGetter(element, private: true);
 
       return '$prev'
           '\t\t\t// $element: $value\n'
-          '\t\t\t$decode: _$getterName,\n';
+          '\t\t\t$decode: $getterName,\n';
     });
 
     file.writeln(
