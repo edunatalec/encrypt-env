@@ -1,14 +1,17 @@
 # Changelog
 
-## [3.3.0] - 2026-04-24
+## [3.3.0] - 2026-04-25
 
 ### Changed
 
 - Bumped `fortis` dependency to `^0.3.0` (was `^0.2.0`). Projects consuming AES-encrypted output must update their own `fortis` constraint to match
+- Generator no longer runs `dart format` on the main output file. The file is written as emitted by `CodeBuilder` (tab-indented, with hex literals kept on single lines), preserving a dense and predictable fingerprint. The accompanying test file is still formatted
+- Generated `_decode` / `_seed` / `_perm` footer (XOR mode) now uses explicit types (`int s`, `final List<int> p`) and blank lines between setup and `return`, matching the package's internal code style
 
 ### Fixed
 
 - Generated file no longer fails to compile when the config has nested maps with 2+ levels of depth. `_buildMapGetter` was double-prefixing inner-map value getters (`__host` instead of `_host`), producing `Undefined name '__host'` errors at compile time
+- README links under "Documentation" pointed to the old `doc/` directory; they now resolve correctly after the rename to `docs/`
 
 ## [3.2.0] - 2026-04-16
 
