@@ -1,6 +1,16 @@
 # Changelog
 
-## 3.2.0 - 2026-04-16
+## [3.3.0] - 2026-04-24
+
+### Changed
+
+- Bumped `fortis` dependency to `^0.3.0` (was `^0.2.0`). Projects consuming AES-encrypted output must update their own `fortis` constraint to match
+
+### Fixed
+
+- Generated file no longer fails to compile when the config has nested maps with 2+ levels of depth. `_buildMapGetter` was double-prefixing inner-map value getters (`__host` instead of `_host`), producing `Undefined name '__host'` errors at compile time
+
+## [3.2.0] - 2026-04-16
 
 ### Added
 
@@ -22,7 +32,7 @@
 - `CodeBuilder` rejects `null` config values with `FormatException` naming the offending key, instead of generating invalid Dart (`static Null get ...`)
 - `Map.merge` detects base/override type mismatches (e.g. primitive vs map) and raises `FormatException` with context, instead of an opaque `TypeError`
 
-## 3.1.0 - 2026-04-13
+## [3.1.0] - 2026-04-13
 
 ### Added
 
@@ -40,7 +50,7 @@
 - Error messages list all tried file paths when no config file is found
 - Updated CLI description and README to reflect multi-format support
 
-## 3.0.0 - 2026-04-12
+## [3.0.0] - 2026-04-12
 
 ### Added
 
@@ -75,25 +85,25 @@
 - Global `keyBytesSize` getter
 - Previous test suite (replaced entirely)
 
-## 2.1.0 - 2026-01-31
+## [2.1.0] - 2026-01-31
 
 ### Fixed
 
 - Correct toCamelCase behavior for strings with length <= 2
 
-## 2.0.2 - 2025-09-02
+## [2.0.2] - 2025-09-02
 
 ### Changed
 
 - Updated documentation
 
-## 2.0.1 - 2025-09-02
+## [2.0.1] - 2025-09-02
 
 ### Changed
 
 - Updated documentation
 
-## 2.0.0 - 2025-09-02
+## [2.0.0] - 2025-09-02
 
 ### Added
 
@@ -113,7 +123,7 @@
 
 - Removed all `// coverage:ignore-line` directives
 
-## 1.1.2 - 2025-05-19
+## [1.1.2] - 2025-05-19
 
 ### Changed
 
@@ -121,13 +131,13 @@
 - Renamed internal files for consistency and clarity
 - Updated package dependencies to latest versions
 
-## 1.1.1 - 2025-02-10
+## [1.1.1] - 2025-02-10
 
 ### Changed
 
 - Update project
 
-## 1.1.0 - 2024-03-13
+## [1.1.0] - 2024-03-13
 
 ### Added
 
@@ -137,12 +147,12 @@
 
 - Enhance code for improved usability
 
-## 1.0.1 - 2024-03-13
+## [1.0.1] - 2024-03-13
 
 ### Changed
 
 - Update README
 
-## 1.0.0 - 2024-03-13
+## [1.0.0] - 2024-03-13
 
 - First release
