@@ -21,6 +21,7 @@ A Dart CLI tool that generates obfuscated or encrypted Dart files from YAML or J
   - [Available flags](#available-flags)
 - [Documentation](#documentation)
 - [Help](#help)
+- [License](#license)
 
 ## Installation
 
@@ -287,8 +288,8 @@ encrypt_env gen --no-test
 
 Detailed documentation about how each mode works:
 
-- [XOR obfuscation](doc/xor-obfuscation/) — [English](doc/xor-obfuscation/en.md) | [Português](doc/xor-obfuscation/pt-br.md) | [Español](doc/xor-obfuscation/es.md)
-- [AES-256 encryption](doc/aes-encryption/) — [English](doc/aes-encryption/en.md) | [Português](doc/aes-encryption/pt-br.md) | [Español](doc/aes-encryption/es.md)
+- [XOR obfuscation](docs/xor-obfuscation/) — [English](docs/xor-obfuscation/en.md) | [Português](docs/xor-obfuscation/pt-br.md) | [Español](docs/xor-obfuscation/es.md)
+- [AES-256 encryption](docs/aes-encryption/) — [English](docs/aes-encryption/en.md) | [Português](docs/aes-encryption/pt-br.md) | [Español](docs/aes-encryption/es.md)
 
 ## Help
 
