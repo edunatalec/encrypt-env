@@ -6,5 +6,6 @@ analyzer:
 
 linter:
   rules:
-    prefer_relative_imports: true
-    public_member_api_docs: true
+    prefer_single_quotes: true
+    prefer_const_declarations: true
+    prefer_const_constructors: true

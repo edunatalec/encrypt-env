@@ -119,7 +119,7 @@ void main() {
 
   group('imports', () {
     test('contains fortis import', () {
-      expect(strategy.imports, contains("package:fortis/fortis.dart"));
+      expect(strategy.imports, contains('package:fortis/fortis.dart'));
     });
   });
 }
