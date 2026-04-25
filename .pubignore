@@ -1,5 +1,5 @@
 .dart_tool/
-build/
+.build/
 .packages
 pubspec.lock
 
@@ -44,3 +44,6 @@ windows/.dart_tool/
 
 CLAUDE.md
 .claude/
+scripts/
+docs/
+analysis_options.yaml
