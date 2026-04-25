@@ -1,6 +1,8 @@
 import 'package:encrypt_env/src/generator/case_style.dart';
 import 'package:encrypt_env/src/generator/test_builder.dart';
+import 'package:encrypt_env/src/strategy/aes_strategy.dart';
 import 'package:encrypt_env/src/strategy/xor_strategy.dart';
+import 'package:fortis/fortis.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -110,6 +112,54 @@ void main() {
         },
       });
       expect(result, contains('isA<Map<String, dynamic>>()'));
+    });
+  });
+
+  group('getter case style', () {
+    String buildWith(CaseStyle style) {
+      return TestBuilder(
+        caseStyle: style,
+        strategy: XorStrategy(),
+        importPath: 'package:consumer/environment.dart',
+      ).build({
+        'env': {'base_url': 'http://localhost'},
+      });
+    }
+
+    test('camelCase produces baseUrl getter access', () {
+      final result = buildWith(CaseStyle.camelCase);
+      expect(result, contains('Env.baseUrl'));
+      expect(result, contains("test('baseUrl returns correct value'"));
+    });
+
+    test('snakeCase produces base_url getter access', () {
+      final result = buildWith(CaseStyle.snakeCase);
+      expect(result, contains('Env.base_url'));
+      expect(result, contains("test('base_url returns correct value'"));
+    });
+
+    test('screamingSnakeCase produces BASE_URL getter access', () {
+      final result = buildWith(CaseStyle.screamingSnakeCase);
+      expect(result, contains('Env.BASE_URL'));
+      expect(result, contains("test('BASE_URL returns correct value'"));
+    });
+  });
+
+  group('strategy testSetup', () {
+    test('emits AES setUpAll block when strategy provides testSetup', () async {
+      final key = await Fortis.aes().keySize(256).generateKey();
+      final aesBuilder = TestBuilder(
+        caseStyle: CaseStyle.camelCase,
+        strategy: AesStrategy(key: key.toBase64()),
+        importPath: 'package:consumer/environment.dart',
+      );
+
+      final result = aesBuilder.build({
+        'env': {'k': 'v'},
+      });
+
+      expect(result, contains('setUpAll'));
+      expect(result, contains('EncryptEnv.init('));
     });
   });
 }
