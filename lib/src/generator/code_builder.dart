@@ -18,7 +18,7 @@ class CodeBuilder {
 
   /// Builds the complete Dart source from [data].
   String build(Map<String, dynamic> data) {
-    final file = StringBuffer();
+    final StringBuffer file = StringBuffer();
 
     _buildHeader(file);
     _buildBody(file, data);
@@ -50,8 +50,8 @@ class CodeBuilder {
   }
 
   void _buildClass(StringBuffer file, Map<String, dynamic> map) {
-    final key = map.keys.first;
-    final name = key.toPascalCase();
+    final String key = map.keys.first;
+    final String name = key.toPascalCase();
 
     file.writeln('sealed class $name {');
     _buildGetters(file, map[key] as Map<String, dynamic>);
@@ -63,12 +63,12 @@ class CodeBuilder {
     Map<String, dynamic> map, {
     bool private = false,
   }) {
-    final entries = map.entries.toList();
+    final List<MapEntry<String, dynamic>> entries = map.entries.toList();
 
-    for (var i = 0; i < entries.length; i++) {
-      final entry = entries[i];
-      final isLast = i == entries.length - 1;
-      final name = _formatGetter(entry.key, private: private);
+    for (int i = 0; i < entries.length; i++) {
+      final MapEntry<String, dynamic> entry = entries[i];
+      final bool isLast = i == entries.length - 1;
+      final String name = _formatGetter(entry.key, private: private);
 
       if (entry.value is Map<String, dynamic>) {
         _buildMapGetter(file, name, entry.value as Map<String, dynamic>,
@@ -85,11 +85,11 @@ class CodeBuilder {
     Map<String, dynamic> map, {
     bool private = false,
   }) {
-    final text = map.keys.fold('', (prev, element) {
-      final value = map[element];
-      final encoded = strategy.encode(element);
-      final decode = strategy.buildMapKeyDecode(encoded);
-      final getterName = _formatGetter(element, private: true);
+    final String text = map.keys.fold('', (prev, element) {
+      final dynamic value = map[element];
+      final String encoded = strategy.encode(element);
+      final String decode = strategy.buildMapKeyDecode(encoded);
+      final String getterName = _formatGetter(element, private: true);
 
       return '$prev'
           '\t\t\t// $element: $value\n'
@@ -120,8 +120,8 @@ class CodeBuilder {
       );
     }
 
-    final encoded = strategy.encode(entry.value.toString());
-    var body = strategy.buildGetterBody(encoded);
+    final String encoded = strategy.encode(entry.value.toString());
+    String body = strategy.buildGetterBody(encoded);
 
     if (entry.value is! String) {
       body = body.replaceFirst(
@@ -131,7 +131,7 @@ class CodeBuilder {
       body += ')';
     }
 
-    var text = '\t/// $name: ${entry.value}\n'
+    final String text = '\t/// $name: ${entry.value}\n'
         '\tstatic ${entry.value.runtimeType} get $name {\n'
         '$body;\n'
         '\t}\n';

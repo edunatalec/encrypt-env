@@ -41,7 +41,6 @@ class Generator {
     final mainPath = '$outDir/$outFile.dart';
 
     await _writeFile(mainPath, source);
-    await _formatFile(mainPath);
 
     String? testPath;
 

@@ -48,31 +48,36 @@ class XorStrategy implements ObfuscationStrategy {
   @override
   String get decodeFunctionSource => '''
 String _decode(List<int> encoded, List<int> salt) {
-  final dk = salt.reversed.map((b) => ((b >> 3) | (b << 5)) & 0xFF).toList();
-  final u2 = List.generate(encoded.length, (i) => encoded[i] ^ dk[i % dk.length]);
-  final p = _perm(encoded.length, _seed(salt));
-  final us = List.generate(encoded.length, (i) => u2[p[i]]);
+  final List<int> dk = salt.reversed.map((b) => ((b >> 3) | (b << 5)) & 0xFF).toList();
+  final List<int> u2 = List.generate(encoded.length, (i) => encoded[i] ^ dk[i % dk.length]);
+  final List<int> p = _perm(encoded.length, _seed(salt));
+  final List<int> us = List.generate(encoded.length, (i) => u2[p[i]]);
+
   return String.fromCharCodes(List.generate(us.length, (i) => us[i] ^ salt[i % salt.length]));
 }
 
 int _seed(List<int> salt) {
-  var s = 0x5f3759df;
-  for (final b in salt) {
+  int s = 0x5f3759df;
+
+  for (final int b in salt) {
     s = ((s ^ b) * 0x01000193) & 0xFFFFFFFF;
   }
+
   return s;
 }
 
 List<int> _perm(int length, int seed) {
-  final p = List<int>.generate(length, (i) => i);
-  var s = seed;
-  for (var i = length - 1; i > 0; i--) {
+  final List<int> p = List<int>.generate(length, (i) => i);
+
+  int s = seed;
+  for (int i = length - 1; i > 0; i--) {
     s = ((s * 1103515245) + 12345) & 0x7FFFFFFF;
-    final j = s % (i + 1);
-    final tmp = p[i];
+    final int j = s % (i + 1);
+    final int tmp = p[i];
     p[i] = p[j];
     p[j] = tmp;
   }
+
   return p;
 }''';
 
@@ -105,10 +110,12 @@ List<int> _perm(int length, int seed) {
   }
 
   List<int> _applyShuffle(List<int> data, List<int> perm) {
-    final result = List<int>.filled(data.length, 0);
-    for (var i = 0; i < data.length; i++) {
+    final List<int> result = List<int>.filled(data.length, 0);
+
+    for (int i = 0; i < data.length; i++) {
       result[perm[i]] = data[i];
     }
+
     return result;
   }
 

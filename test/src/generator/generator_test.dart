@@ -146,6 +146,33 @@ void main() {
       expect(testContent, contains('expect('));
     });
 
+    test('does not run dart format on the generated main file', () async {
+      File('${tempDir.path}/environment.yaml').writeAsStringSync(
+        'app:\n  base_url: http://localhost\n  port: 3000',
+      );
+
+      final generator = Generator(
+        configReader: ConfigReader(
+          folderName: tempDir.path,
+          configName: 'environment',
+        ),
+        codeBuilder: CodeBuilder(
+          caseStyle: CaseStyle.camelCase,
+          strategy: XorStrategy(),
+        ),
+        outDir: outDir.path,
+        outFile: 'environment',
+      );
+
+      await generator.run();
+
+      // CodeBuilder emits tab-indented source; `dart format` would replace
+      // tabs with spaces, so the presence of tabs proves no formatting ran.
+      final written =
+          File('${outDir.path}/environment.dart').readAsStringSync();
+      expect(written, contains('\t'));
+    });
+
     test('does not write a test file when testBuilder is null', () async {
       File('${tempDir.path}/environment.yaml').writeAsStringSync(
         'app:\n  base_url: http://localhost',
