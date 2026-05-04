@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.0.0] - 2026-05-04
+
+### Added
+
+- `toScreamingSnakeCase()` extension on `String` (in `lib/src/utils/string_utils.dart`), companion to `toSnakeCase()`. Splits on `_`, `-`, whitespace, and camelCase/PascalCase boundaries (acronyms included), then joins with `_` and uppercases everything
+
+### Changed
+
+- **BREAKING:** Nested maps in the config now generate dedicated typed classes instead of `Map<String, dynamic>` getters. A YAML section like `database.credentials.username` now exposes `Database.credentials.username` (typed), `Database.credentials.toMap()`, and `Database.toMap()`. Recursive — works for any depth. Migration: replace map-style access (`Database.credentials['username']`) with property access (`Database.credentials.username`)
+- Every generated class now exposes a `toMap()` method (top-level via `static`, nested via instance). Map keys are still encoded by the active strategy and decoded at call time, matching the previous obfuscation guarantees
+- `toSnakeCase()` is now canonical: returns the entire string lowercased (`'helloWorld'.toSnakeCase()` → `'hello_world'`, was `'hello_World'`). Whitespace is also treated as a separator alongside `_` and `-`. Code generators (`CodeBuilder`, `TestBuilder`) drop the redundant `.toSnakeCase().toLowerCase()` / `.toSnakeCase().toUpperCase()` chains in favor of the canonical helpers
+
+### Fixed
+
+- Generated file no longer fails to compile when sibling sub-maps share keys (e.g. `firebase.android.api_key` and `firebase.ios.api_key`). Previously, `_buildMapGetter` emitted private getters into the parent class scope, producing `'_apiKey' is already defined` for any pair of sibling maps with overlapping keys. Each sub-map now lives in its own class scope, eliminating the collision
+- `toPascalCase` / `toCamelCase` now preserve camelCase boundaries when the input itself is camelCase or PascalCase. Previously, `'minConnections'.toCamelCase()` collapsed to `'minconnections'` because the implementation lowercased the input before splitting on `_-`, destroying word boundaries. Acronym blocks (`'IDLE_timeout'` → `'idleTimeout'`, `'HTTPServer'` → `'httpServer'`) and chaotic mixes (`'mixed_camelCase-stuff'` → `'mixedCamelCaseStuff'`) are now handled. Whitespace is also treated as a separator alongside `_` and `-`
+
 ## [3.3.0] - 2026-04-25
 
 ### Changed
