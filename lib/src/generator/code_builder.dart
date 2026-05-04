@@ -148,7 +148,7 @@ class CodeBuilder {
     }
 
     final String prefix = isStatic ? 'static ' : '';
-    final String text = '\t/// $name: ${_formatDocValue(entry.value)}\n'
+    final String text = '\t/// ${_formatDocValue(entry.value)}\n'
         '\t$prefix${entry.value.runtimeType} get $name {\n'
         '$body;\n'
         '\t}\n';
