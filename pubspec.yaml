@@ -3,7 +3,7 @@ description: >
   Generate obfuscated or encrypted Dart files from YAML/JSON configuration.
   Protect sensitive data in Flutter/Dart apps with multi-layer XOR obfuscation
   or AES-256 encryption.
-version: 3.3.0
+version: 4.0.0
 homepage: https://github.com/edunatalec/encrypt-env
 repository: https://github.com/edunatalec/encrypt-env
 issue_tracker: https://github.com/edunatalec/encrypt-env/issues
