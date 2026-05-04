@@ -161,6 +161,7 @@ The file `lib/environment.dart` will be generated with sealed classes and strong
 
 ```dart
 sealed class Environment {
+  /// 'http://localhost:3000'
   static String get baseUrl {
     final List<int> encoded = [0xd5, 0x98, ...];
     final List<int> salt = [...[0xaa, 0xbb, ...], ...[0xcc, 0xdd, ...]];
@@ -168,6 +169,7 @@ sealed class Environment {
     return _decode(encoded, salt);
   }
 
+  /// false
   static bool get production {
     final List<int> encoded = [0xdb, 0x8d, ...];
     final List<int> salt = [...[0x94, 0xb5, ...], ...[0xe3, 0xa0, ...]];
@@ -180,13 +182,15 @@ sealed class Environment {
 
   /// Returns a map representation of this section.
   ///
+  /// ```
   /// {
-  ///   base_url: http://localhost:3000,
-  ///   production: false,
-  ///   headers: {
-  ///     api-key: value,
+  ///   'base_url': 'http://localhost:3000',
+  ///   'production': false,
+  ///   'headers': {
+  ///     'api-key': 'value',
   ///   },
   /// }
+  /// ```
   static Map<String, dynamic> toMap() => <String, dynamic>{
     _decode([...], [...[...], ...[...]]): baseUrl,
     _decode([...], [...[...], ...[...]]): production,
@@ -197,6 +201,7 @@ sealed class Environment {
 final class EnvironmentHeaders {
   const EnvironmentHeaders._();
 
+  /// 'value'
   String get apiKey {
     final List<int> encoded = [0xdc, ...];
     final List<int> salt = [...[...], ...[...]];
@@ -204,15 +209,33 @@ final class EnvironmentHeaders {
     return _decode(encoded, salt);
   }
 
+  /// Returns a map representation of this section.
+  ///
+  /// ```
+  /// {
+  ///   'api-key': 'value',
+  /// }
+  /// ```
   Map<String, dynamic> toMap() => <String, dynamic>{
     _decode([...], [...[...], ...[...]]): apiKey,
   };
 }
 
 sealed class Endpoint {
+  /// 'endpoint-a'
   static String get endpointA { ... }
+
+  /// 'endpoint-b'
   static String get endpointB { ... }
 
+  /// Returns a map representation of this section.
+  ///
+  /// ```
+  /// {
+  ///   'endpoint_a': 'endpoint-a',
+  ///   'endpoint_b': 'endpoint-b',
+  /// }
+  /// ```
   static Map<String, dynamic> toMap() { ... }
 }
 ```
@@ -227,6 +250,8 @@ Environment.toMap();            // entire section as a Map<String, dynamic>
 ```
 
 Each value has its own unique salt, split into two fragments for additional obscurity. Map keys returned by `toMap()` are also encoded — they are decoded at call time, so the original YAML keys never appear in plaintext in the generated source.
+
+> **About the `///` doc comments showing plaintext values.** The generated source includes per-getter docs (e.g. `/// 'http://localhost:3000'`) and a pretty-printed map dump on each `toMap()` for readability while you work in your IDE. **These comments live only in the source file** — Dart and Flutter strip all comments and DartDoc during AOT/JIT compilation, so they never reach the shipped binary, the obfuscated symbol map, or runtime memory. The values that actually ship are the encoded byte arrays inside each getter body.
 
 ## Merging environments
 
