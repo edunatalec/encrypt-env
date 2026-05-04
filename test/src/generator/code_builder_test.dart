@@ -118,14 +118,18 @@ void main() {
           },
         },
       });
-      // Top-level Database.toMap() doc dumps the entire tree as `{ ... }`.
+      // Top-level Database.toMap() doc dumps the entire tree as `{ ... }`,
+      // wrapped in a fenced code block so DartDoc / IDE hovers preserve
+      // line breaks instead of collapsing the literal into one long line.
+      // Keys are quoted; string values are quoted, primitives are not.
+      expect(result, contains('\t/// ```\n'));
       expect(result, contains('\t/// {\n'));
-      expect(result, contains('\t///   host: localhost,\n'));
-      expect(result, contains('\t///   port: 5432,\n'));
-      expect(result, contains('\t///   credentials: {\n'));
-      expect(result, contains('\t///     username: dev_user,\n'));
-      expect(result, contains('\t///     meta: {\n'));
-      expect(result, contains('\t///       rotated_at: never,\n'));
+      expect(result, contains("\t///   'host': 'localhost',\n"));
+      expect(result, contains("\t///   'port': 5432,\n"));
+      expect(result, contains("\t///   'credentials': {\n"));
+      expect(result, contains("\t///     'username': 'dev_user',\n"));
+      expect(result, contains("\t///     'meta': {\n"));
+      expect(result, contains("\t///       'rotated_at': 'never',\n"));
       expect(result, contains('\t///     },\n'));
       expect(result, contains('\t///   },\n'));
       expect(result, contains('\t/// }\n'));

@@ -148,7 +148,7 @@ class CodeBuilder {
     }
 
     final String prefix = isStatic ? 'static ' : '';
-    final String text = '\t/// $name: ${entry.value}\n'
+    final String text = '\t/// $name: ${_formatDocValue(entry.value)}\n'
         '\t$prefix${entry.value.runtimeType} get $name {\n'
         '$body;\n'
         '\t}\n';
@@ -169,8 +169,9 @@ class CodeBuilder {
 
       final String valueRef =
           value is Map<String, dynamic> ? '$getterName.toMap()' : getterName;
-      final String comment =
-          value is Map<String, dynamic> ? key : '$key: $value';
+      final String comment = value is Map<String, dynamic>
+          ? "'$key'"
+          : "'$key': ${_formatDocValue(value)}";
 
       return '$prev'
           '\t\t\t// $comment\n'
@@ -183,7 +184,9 @@ class CodeBuilder {
     file.writeln(
       '\t/// Returns a map representation of this section.\n'
       '\t///\n'
+      '\t/// ```\n'
       '$docDump'
+      '\t/// ```\n'
       '\t${prefix}Map<String, dynamic> toMap() {\n'
       '\t\treturn <String, dynamic>{\n'
       '$entriesText'
@@ -213,12 +216,17 @@ class CodeBuilder {
       final dynamic value = entry.value;
 
       if (value is Map<String, dynamic>) {
-        doc.writeln('\t/// $pad${entry.key}: {');
+        doc.writeln("\t/// $pad'${entry.key}': {");
         _appendMapDocBody(doc, value, indent: indent + 1);
         doc.writeln('\t/// $pad},');
       } else {
-        doc.writeln('\t/// $pad${entry.key}: $value,');
+        doc.writeln("\t/// $pad'${entry.key}': ${_formatDocValue(value)},");
       }
     }
+  }
+
+  String _formatDocValue(dynamic value) {
+    if (value is String) return "'$value'";
+    return '$value';
   }
 }
