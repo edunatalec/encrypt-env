@@ -105,12 +105,25 @@ void main() {
       expect(result, contains('isA<int>()'));
     });
 
-    test('nested map produces a Map assertion', () {
+    test('nested map produces a nested group with typed access', () {
       final result = builder.build({
         'env': {
           'headers': {'x': 'y'},
         },
       });
+      expect(result, contains("group('headers'"));
+      expect(result, contains('Env.headers.x'));
+    });
+
+    test('every level emits a toMap assertion', () {
+      final result = builder.build({
+        'env': {
+          'host': 'localhost',
+          'headers': {'x': 'y'},
+        },
+      });
+      expect(result, contains('Env.toMap()'));
+      expect(result, contains('Env.headers.toMap()'));
       expect(result, contains('isA<Map<String, dynamic>>()'));
     });
   });

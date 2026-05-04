@@ -26,7 +26,7 @@ class TestBuilder {
 
   /// Builds the complete test source from [data].
   String build(Map<String, dynamic> data) {
-    final file = StringBuffer();
+    final StringBuffer file = StringBuffer();
 
     _buildHeader(file);
     _buildBody(file, data);
@@ -35,7 +35,7 @@ class TestBuilder {
   }
 
   void _buildHeader(StringBuffer file) {
-    final testPackage = flutter ? 'flutter_test' : 'test';
+    final String testPackage = flutter ? 'flutter_test' : 'test';
 
     file.writeln("import 'package:$testPackage/$testPackage.dart';");
     file.writeln("import '$importPath';");
@@ -61,29 +61,44 @@ class TestBuilder {
     String key,
     Map<String, dynamic> map,
   ) {
-    final className = key.toPascalCase();
+    final String className = key.toPascalCase();
 
     file.writeln("  group('$className', () {");
+    _buildEntriesTests(file, accessPath: className, data: map);
+    file.writeln('  });\n');
+  }
 
-    for (final entry in map.entries) {
+  void _buildEntriesTests(
+    StringBuffer file, {
+    required String accessPath,
+    required Map<String, dynamic> data,
+  }) {
+    for (final entry in data.entries) {
+      final String getterName = caseStyle.format(entry.key);
+
       if (entry.value is Map<String, dynamic>) {
-        _buildMapTest(file, className, entry.key);
+        file.writeln("    group('$getterName', () {");
+        _buildEntriesTests(
+          file,
+          accessPath: '$accessPath.$getterName',
+          data: entry.value as Map<String, dynamic>,
+        );
+        file.writeln('    });\n');
       } else {
-        _buildValueTest(file, className, entry.key, entry.value);
+        _buildValueTest(file, accessPath, getterName, entry.value);
       }
     }
 
-    file.writeln('  });\n');
+    _buildToMapTest(file, accessPath);
   }
 
   void _buildValueTest(
     StringBuffer file,
-    String className,
-    String key,
+    String accessPath,
+    String getterName,
     dynamic value,
   ) {
-    final getterName = _formatGetter(key);
-    final type = value.runtimeType;
+    final Type type = value.runtimeType;
 
     String expected;
     if (value is String) {
@@ -93,26 +108,20 @@ class TestBuilder {
     }
 
     file.writeln("    test('$getterName returns correct value', () {");
-    file.writeln('      expect($className.$getterName, $expected);');
+    file.writeln('      expect($accessPath.$getterName, $expected);');
     file.writeln('    });\n');
 
     if (value is! String) {
       file.writeln("    test('$getterName returns $type', () {");
-      file.writeln('      expect($className.$getterName, isA<$type>());');
+      file.writeln('      expect($accessPath.$getterName, isA<$type>());');
       file.writeln('    });\n');
     }
   }
 
-  void _buildMapTest(
-    StringBuffer file,
-    String className,
-    String key,
-  ) {
-    final getterName = _formatGetter(key);
-
-    file.writeln("    test('$getterName returns Map', () {");
+  void _buildToMapTest(StringBuffer file, String accessPath) {
+    file.writeln("    test('toMap returns Map<String, dynamic>', () {");
     file.writeln(
-      '      expect($className.$getterName, isA<Map<String, dynamic>>());',
+      '      expect($accessPath.toMap(), isA<Map<String, dynamic>>());',
     );
     file.writeln('    });\n');
   }
@@ -125,20 +134,5 @@ class TestBuilder {
         .replaceAll('\r', r'\r')
         .replaceAll('\n', r'\n')
         .replaceAll('\t', r'\t');
-  }
-
-  String _formatGetter(String text) {
-    text = text.replaceAll(' ', '_');
-
-    switch (caseStyle) {
-      case CaseStyle.snakeCase:
-        text = text.toSnakeCase().toLowerCase();
-      case CaseStyle.camelCase:
-        text = text.toCamelCase();
-      case CaseStyle.screamingSnakeCase:
-        text = text.toSnakeCase().toUpperCase();
-    }
-
-    return text;
   }
 }

@@ -76,13 +76,92 @@ void main() {
       expect(result, contains('double.parse'));
     });
 
-    test('generates Map getter for nested maps', () {
+    test('generates child class and accessor for nested maps', () {
       final result = builder.build({
         'environment': {
           'headers': {'api_key': 'abc123'},
         },
       });
-      expect(result, contains('static Map<String, dynamic> get headers'));
+      expect(result, contains('final class EnvironmentHeaders'));
+      expect(result, contains('const EnvironmentHeaders._();'));
+      expect(
+        result,
+        contains(
+          'static EnvironmentHeaders get headers '
+          '=> const EnvironmentHeaders._();',
+        ),
+      );
+      expect(result, contains('/// The `headers` section.'));
+      expect(result, contains('String get apiKey'));
+    });
+
+    test('generates toMap on every level', () {
+      final result = builder.build({
+        'environment': {
+          'host': 'localhost',
+          'headers': {'api_key': 'abc123'},
+        },
+      });
+      expect(result, contains('static Map<String, dynamic> toMap()'));
+      expect(result, contains('Map<String, dynamic> toMap()'));
+      expect(result, contains('headers.toMap()'));
+    });
+
+    test('toMap doc dumps the full map as a Dart-style literal', () {
+      final result = builder.build({
+        'database': {
+          'host': 'localhost',
+          'port': 5432,
+          'credentials': {
+            'username': 'dev_user',
+            'meta': {'rotated_at': 'never'},
+          },
+        },
+      });
+      // Top-level Database.toMap() doc dumps the entire tree as `{ ... }`.
+      expect(result, contains('\t/// {\n'));
+      expect(result, contains('\t///   host: localhost,\n'));
+      expect(result, contains('\t///   port: 5432,\n'));
+      expect(result, contains('\t///   credentials: {\n'));
+      expect(result, contains('\t///     username: dev_user,\n'));
+      expect(result, contains('\t///     meta: {\n'));
+      expect(result, contains('\t///       rotated_at: never,\n'));
+      expect(result, contains('\t///     },\n'));
+      expect(result, contains('\t///   },\n'));
+      expect(result, contains('\t/// }\n'));
+    });
+
+    test('emits child classes recursively for deeply nested maps', () {
+      final result = builder.build({
+        'database': {
+          'credentials': {
+            'meta': {'rotated_at': 'never'},
+          },
+        },
+      });
+      expect(result, contains('final class DatabaseCredentials'));
+      expect(result, contains('final class DatabaseCredentialsMeta'));
+      expect(
+        result,
+        contains(
+          'DatabaseCredentialsMeta get meta '
+          '=> const DatabaseCredentialsMeta._();',
+        ),
+      );
+    });
+
+    test('sibling sub-maps with shared keys do not collide', () {
+      final result = builder.build({
+        'services': {
+          'auth': {'token': 'A'},
+          'billing': {'token': 'B'},
+        },
+      });
+      expect(result, contains('final class ServicesAuth'));
+      expect(result, contains('final class ServicesBilling'));
+      // Each sibling has its own scope: getter `token` lives inside its own
+      // class, so there is no `_token` declared at the parent scope.
+      expect(result, isNot(contains('static String get _token')));
     });
 
     test('generates multiple classes for multiple top-level keys', () {

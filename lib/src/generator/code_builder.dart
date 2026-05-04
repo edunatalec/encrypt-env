@@ -41,7 +41,15 @@ class CodeBuilder {
 
   void _buildBody(StringBuffer file, Map<String, dynamic> data) {
     for (final entry in data.entries) {
-      _buildClass(file, {entry.key: entry.value});
+      final Map<String, dynamic> sectionData =
+          entry.value as Map<String, dynamic>;
+
+      _buildClass(
+        file,
+        pathSegments: <String>[entry.key.toPascalCase()],
+        data: sectionData,
+        isTopLevel: true,
+      );
     }
   }
 
@@ -49,69 +57,76 @@ class CodeBuilder {
     file.write(strategy.decodeFunctionSource);
   }
 
-  void _buildClass(StringBuffer file, Map<String, dynamic> map) {
-    final String key = map.keys.first;
-    final String name = key.toPascalCase();
-
-    file.writeln('sealed class $name {');
-    _buildGetters(file, map[key] as Map<String, dynamic>);
-    file.writeln('}\n');
-  }
-
-  void _buildGetters(
-    StringBuffer file,
-    Map<String, dynamic> map, {
-    bool private = false,
+  void _buildClass(
+    StringBuffer file, {
+    required List<String> pathSegments,
+    required Map<String, dynamic> data,
+    required bool isTopLevel,
   }) {
-    final List<MapEntry<String, dynamic>> entries = map.entries.toList();
+    final String className = pathSegments.join('');
 
-    for (int i = 0; i < entries.length; i++) {
-      final MapEntry<String, dynamic> entry = entries[i];
-      final bool isLast = i == entries.length - 1;
-      final String name = _formatGetter(entry.key, private: private);
+    if (isTopLevel) {
+      file.writeln('sealed class $className {');
+    } else {
+      file.writeln('final class $className {');
+      file.writeln('\tconst $className._();\n');
+    }
 
+    final List<MapEntry<String, dynamic>> entries = data.entries.toList();
+
+    for (final MapEntry<String, dynamic> entry in entries) {
       if (entry.value is Map<String, dynamic>) {
-        _buildMapGetter(file, name, entry.value as Map<String, dynamic>,
-            private: private);
+        _buildChildAccessor(
+          file,
+          parentSegments: pathSegments,
+          childKey: entry.key,
+          isTopLevel: isTopLevel,
+        );
       } else {
-        _buildValueGetter(file, name, entry, isLast: isLast);
+        _buildValueGetter(file, entry, isStatic: isTopLevel);
+      }
+    }
+
+    _buildToMap(file, data, isStatic: isTopLevel);
+
+    file.writeln('}\n');
+
+    for (final MapEntry<String, dynamic> entry in entries) {
+      if (entry.value is Map<String, dynamic>) {
+        _buildClass(
+          file,
+          pathSegments: <String>[
+            ...pathSegments,
+            entry.key.toPascalCase(),
+          ],
+          data: entry.value as Map<String, dynamic>,
+          isTopLevel: false,
+        );
       }
     }
   }
 
-  void _buildMapGetter(
-    StringBuffer file,
-    String name,
-    Map<String, dynamic> map, {
-    bool private = false,
+  void _buildChildAccessor(
+    StringBuffer file, {
+    required List<String> parentSegments,
+    required String childKey,
+    required bool isTopLevel,
   }) {
-    final String text = map.keys.fold('', (prev, element) {
-      final dynamic value = map[element];
-      final String encoded = strategy.encode(element);
-      final String decode = strategy.buildMapKeyDecode(encoded);
-      final String getterName = _formatGetter(element, private: true);
-
-      return '$prev'
-          '\t\t\t// $element: $value\n'
-          '\t\t\t$decode: $getterName,\n';
-    });
+    final String childClassName =
+        <String>[...parentSegments, childKey.toPascalCase()].join('');
+    final String getterName = caseStyle.format(childKey);
+    final String prefix = isTopLevel ? 'static ' : '';
 
     file.writeln(
-      '\tstatic Map<String, dynamic> get $name {\n'
-      '\t\treturn {\n'
-      '$text'
-      '\t\t};\n'
-      '\t}\n',
+      '\t/// The `$childKey` section.\n'
+      '\t$prefix$childClassName get $getterName => const $childClassName._();\n',
     );
-
-    _buildGetters(file, map, private: true);
   }
 
   void _buildValueGetter(
     StringBuffer file,
-    String name,
     MapEntry<String, dynamic> entry, {
-    bool isLast = false,
+    required bool isStatic,
   }) {
     if (entry.value == null) {
       throw FormatException(
@@ -120,6 +135,7 @@ class CodeBuilder {
       );
     }
 
+    final String name = caseStyle.format(entry.key);
     final String encoded = strategy.encode(entry.value.toString());
     String body = strategy.buildGetterBody(encoded);
 
@@ -131,34 +147,78 @@ class CodeBuilder {
       body += ')';
     }
 
+    final String prefix = isStatic ? 'static ' : '';
     final String text = '\t/// $name: ${entry.value}\n'
-        '\tstatic ${entry.value.runtimeType} get $name {\n'
+        '\t$prefix${entry.value.runtimeType} get $name {\n'
         '$body;\n'
         '\t}\n';
 
-    if (isLast) {
-      file.write(text);
-    } else {
-      file.writeln(text);
-    }
+    file.writeln(text);
   }
 
-  String _formatGetter(String text, {bool private = false}) {
-    text = text.replaceAll(' ', '_');
+  void _buildToMap(
+    StringBuffer file,
+    Map<String, dynamic> data, {
+    required bool isStatic,
+  }) {
+    final String entriesText = data.keys.fold('', (prev, key) {
+      final dynamic value = data[key];
+      final String encoded = strategy.encode(key);
+      final String decode = strategy.buildMapKeyDecode(encoded);
+      final String getterName = caseStyle.format(key);
 
-    switch (caseStyle) {
-      case CaseStyle.snakeCase:
-        text = text.toSnakeCase().toLowerCase();
-      case CaseStyle.camelCase:
-        text = text.toCamelCase();
-      case CaseStyle.screamingSnakeCase:
-        text = text.toSnakeCase().toUpperCase();
+      final String valueRef =
+          value is Map<String, dynamic> ? '$getterName.toMap()' : getterName;
+      final String comment =
+          value is Map<String, dynamic> ? key : '$key: $value';
+
+      return '$prev'
+          '\t\t\t// $comment\n'
+          '\t\t\t$decode: $valueRef,\n';
+    });
+
+    final String docDump = _buildMapDoc(data);
+    final String prefix = isStatic ? 'static ' : '';
+
+    file.writeln(
+      '\t/// Returns a map representation of this section.\n'
+      '\t///\n'
+      '$docDump'
+      '\t${prefix}Map<String, dynamic> toMap() {\n'
+      '\t\treturn <String, dynamic>{\n'
+      '$entriesText'
+      '\t\t};\n'
+      '\t}',
+    );
+  }
+
+  String _buildMapDoc(Map<String, dynamic> data) {
+    final StringBuffer doc = StringBuffer();
+
+    doc.writeln('\t/// {');
+    _appendMapDocBody(doc, data, indent: 1);
+    doc.writeln('\t/// }');
+
+    return doc.toString();
+  }
+
+  void _appendMapDocBody(
+    StringBuffer doc,
+    Map<String, dynamic> data, {
+    required int indent,
+  }) {
+    final String pad = '  ' * indent;
+
+    for (final entry in data.entries) {
+      final dynamic value = entry.value;
+
+      if (value is Map<String, dynamic>) {
+        doc.writeln('\t/// $pad${entry.key}: {');
+        _appendMapDocBody(doc, value, indent: indent + 1);
+        doc.writeln('\t/// $pad},');
+      } else {
+        doc.writeln('\t/// $pad${entry.key}: $value,');
+      }
     }
-
-    if (private) {
-      text = '_$text';
-    }
-
-    return text;
   }
 }
