@@ -211,7 +211,56 @@ database:
 }
 ```
 
+#### Full config (all sections combined)
+
+```json
+{
+  "environment": {
+    "base_url": "http://localhost:3000",
+    "version": "1.0.0",
+    "production": false,
+    "debug": true,
+    "api_key": "dev_api_key_123",
+    "timeout": 30,
+    "headers": {
+      "content_type": "application/json",
+      "accept": "application/json",
+      "authorization": {
+        "prefix": "Bearer",
+        "refresh_enabled": true
+      }
+    }
+  },
+  "endpoint": {
+    "auth_login": "/api/v1/auth/login",
+    "auth_register": "/api/v1/auth/register",
+    "auth_refresh": "/api/v1/auth/refresh",
+    "users_profile": "/api/v1/users/profile",
+    "products_list": "/api/v1/products",
+    "orders_create": "/api/v1/orders"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "myapp_dev",
+    "ssl": false,
+    "credentials": {
+      "username": "dev_user",
+      "password": "dev_password"
+    },
+    "pool": {
+      "min_connections": 2,
+      "max_connections": 10
+    }
+  }
+}
+```
+
 ### Merging environments
+
+Merging works the same way for `.yaml`, `.yml`, and `.json`. The base file and the environment override file can even use **different formats** — e.g. base in `.yaml` and override in `.json`. Resolution priority is `.yaml` > `.yml` > `.json` per file.
+
+#### YAML
 
 Base config (`environment/environment.yaml`):
 
@@ -265,10 +314,80 @@ database:
     max_connections: 100
 ```
 
-Generate with merge:
+#### JSON
+
+Base config (`environment/environment.json`):
+
+```json
+{
+  "environment": {
+    "base_url": "http://localhost:3000",
+    "production": false,
+    "debug": true,
+    "api_key": "dev_api_key_123",
+    "timeout": 30,
+    "headers": {
+      "content_type": "application/json",
+      "authorization": {
+        "prefix": "Bearer",
+        "refresh_enabled": true
+      }
+    }
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "myapp_dev",
+    "ssl": false,
+    "credentials": {
+      "username": "dev_user",
+      "password": "dev_password"
+    },
+    "pool": {
+      "min_connections": 2,
+      "max_connections": 10
+    }
+  }
+}
+```
+
+Production override (`environment/prod_environment.json`):
+
+```json
+{
+  "environment": {
+    "base_url": "https://api.myapp.com",
+    "production": true,
+    "debug": false,
+    "api_key": "prod_api_key_abc",
+    "timeout": 10,
+    "headers": {
+      "authorization": {
+        "refresh_enabled": false
+      }
+    }
+  },
+  "database": {
+    "host": "db.myapp.com",
+    "ssl": true,
+    "credentials": {
+      "username": "prod_user",
+      "password": "prod_password"
+    },
+    "pool": {
+      "min_connections": 10,
+      "max_connections": 100
+    }
+  }
+}
+```
+
+#### Generate with merge
+
+Same command for both formats — the CLI auto-detects which file exists:
 
 ```sh
 encrypt_env gen -e prod
 ```
 
-> Values from `prod_environment.yaml` override the base. Nested maps are merged recursively — unspecified values like `database.port` and `database.name` are preserved from the base config.
+> Values from `prod_environment.{yaml,yml,json}` override the base. Nested maps are merged recursively — unspecified values like `database.port` and `database.name` are preserved from the base config.

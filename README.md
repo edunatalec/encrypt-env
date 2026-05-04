@@ -15,6 +15,7 @@ A Dart CLI tool that generates obfuscated or encrypted Dart files from YAML or J
 - [Setup](#setup)
   - [Basic example](#basic-example)
 - [Merging environments](#merging-environments)
+- [JSON configuration](#json-configuration)
 - [Key generation](#key-generation)
 - [Test generation](#test-generation)
 - [Customization](#customization)
@@ -148,13 +149,15 @@ endpoint:
   endpoint_b: 'endpoint-b'
 ```
 
+> Prefer JSON? Skip ahead to the [JSON configuration](#json-configuration) section for the equivalent file and merging example.
+
 Run:
 
 ```sh
 encrypt_env gen
 ```
 
-The file `lib/environment.dart` will be generated with sealed classes and strongly-typed getters:
+The file `lib/environment.dart` will be generated with sealed classes and strongly-typed getters. Nested maps become their own typed classes, recursively, so you get autocomplete all the way down:
 
 ```dart
 sealed class Environment {
@@ -172,48 +175,167 @@ sealed class Environment {
     return bool.parse(_decode(encoded, salt));
   }
 
-  static Map<String, dynamic> get headers {
-    return {
-      _decode([0xdc, ...], [...[...], ...[...]]): _apiKey,
-    };
+  /// The `headers` section.
+  static EnvironmentHeaders get headers => const EnvironmentHeaders._();
+
+  /// Returns a map representation of this section.
+  ///
+  /// {
+  ///   base_url: http://localhost:3000,
+  ///   production: false,
+  ///   headers: {
+  ///     api-key: value,
+  ///   },
+  /// }
+  static Map<String, dynamic> toMap() => <String, dynamic>{
+    _decode([...], [...[...], ...[...]]): baseUrl,
+    _decode([...], [...[...], ...[...]]): production,
+    _decode([...], [...[...], ...[...]]): headers.toMap(),
+  };
+}
+
+final class EnvironmentHeaders {
+  const EnvironmentHeaders._();
+
+  String get apiKey {
+    final List<int> encoded = [0xdc, ...];
+    final List<int> salt = [...[...], ...[...]];
+
+    return _decode(encoded, salt);
   }
+
+  Map<String, dynamic> toMap() => <String, dynamic>{
+    _decode([...], [...[...], ...[...]]): apiKey,
+  };
 }
 
 sealed class Endpoint {
   static String get endpointA { ... }
   static String get endpointB { ... }
+
+  static Map<String, dynamic> toMap() { ... }
 }
 ```
 
-Each value has its own unique salt, split into two fragments for additional obscurity.
+Access nested values with regular dot syntax — no map indexing, no string keys at the call site:
+
+```dart
+Environment.baseUrl;            // 'http://localhost:3000'
+Environment.headers.apiKey;     // 'value'
+Environment.headers.toMap();    // { 'api-key': 'value' }
+Environment.toMap();            // entire section as a Map<String, dynamic>
+```
+
+Each value has its own unique salt, split into two fragments for additional obscurity. Map keys returned by `toMap()` are also encoded — they are decoded at call time, so the original YAML keys never appear in plaintext in the generated source.
 
 ## Merging environments
 
-You can merge environment-specific overrides on top of a base config:
+You can merge environment-specific overrides on top of a base config. The base file holds your full configuration; the override file only carries the keys that change for that environment. Nested maps are merged recursively — anything you don't repeat in the override is inherited from the base.
+
+**Base** (`environment/environment.yaml`):
 
 ```yaml
-# environment/environment.yaml (base)
 environment:
-  production: false
   base_url: 'http://localhost:3000'
+  version: '1.0.0'
+  production: false
+  debug: true
   api_key: 'dev_key'
+  timeout: 30
+  headers:
+    content_type: 'application/json'
+    authorization:
+      prefix: 'Bearer'
+      refresh_enabled: true
+
+database:
+  host: 'localhost'
+  port: 5432
+  name: 'myapp_dev'
+  ssl: false
+  credentials:
+    username: 'dev_user'
+    password: 'dev_password'
 ```
 
+**Override** (`environment/prod_environment.yaml`) — only the keys that change in production:
+
 ```yaml
-# environment/prod_environment.yaml (overrides)
 environment:
-  production: true
   base_url: 'https://api.example.com'
+  production: true
+  debug: false
   api_key: 'prod_key'
+  headers:
+    authorization:
+      refresh_enabled: false
+
+database:
+  host: 'db.example.com'
+  ssl: true
+  credentials:
+    username: 'prod_user'
+    password: 'prod_password'
 ```
+
+**Resulting merged config** used for code generation:
+
+```yaml
+environment:
+  base_url: 'https://api.example.com'   # from prod
+  version: '1.0.0'                      # from base
+  production: true                      # from prod
+  debug: false                          # from prod
+  api_key: 'prod_key'                   # from prod
+  timeout: 30                           # from base
+  headers:
+    content_type: 'application/json'    # from base
+    authorization:
+      prefix: 'Bearer'                  # from base
+      refresh_enabled: false            # from prod
+
+database:
+  host: 'db.example.com'                # from prod
+  port: 5432                            # from base
+  name: 'myapp_dev'                     # from base
+  ssl: true                             # from prod
+  credentials:
+    username: 'prod_user'               # from prod
+    password: 'prod_password'           # from prod
+```
+
+Generate with:
 
 ```sh
 encrypt_env gen -e prod
 ```
 
-Values from `prod_environment.yaml` override the base config. Unspecified values are preserved from the base.
+> Use any prefix: `staging`, `dev`, `uat`, etc. Format: `{prefix}_environment.{yaml|yml|json}`.
 
-> Use any prefix: `staging`, `dev`, `uat`, etc. Format: `{prefix}_environment.yaml`.
+## JSON configuration
+
+Every example in this README is shown in YAML for readability, but the CLI accepts `.json` (and `.yml`) as well. The format is **transparent** to every feature: code generation, [environment merging](#merging-environments), strategies (XOR/AES), case styles, and tests all behave identically — only the file extension changes.
+
+Auto-detection priority is `.yaml` > `.yml` > `.json`. Base and override files can even use **different formats** in the same project (e.g. base in `.yaml`, override in `.json`).
+
+Equivalent of the [Basic example](#basic-example) above, written as `environment/environment.json`:
+
+```json
+{
+  "environment": {
+    "base_url": "http://localhost:3000",
+    "version": "1.0.0",
+    "production": false,
+    "headers": {
+      "api-key": "value"
+    }
+  },
+  "endpoint": {
+    "endpoint_a": "endpoint-a",
+    "endpoint_b": "endpoint-b"
+  }
+}
+```
 
 ## Key generation
 
@@ -255,6 +377,20 @@ void main() {
 
     test('production returns bool', () {
       expect(Environment.production, isA<bool>());
+    });
+
+    group('headers', () {
+      test('apiKey returns correct value', () {
+        expect(Environment.headers.apiKey, 'value');
+      });
+
+      test('toMap returns Map<String, dynamic>', () {
+        expect(Environment.headers.toMap(), isA<Map<String, dynamic>>());
+      });
+    });
+
+    test('toMap returns Map<String, dynamic>', () {
+      expect(Environment.toMap(), isA<Map<String, dynamic>>());
     });
   });
 }
